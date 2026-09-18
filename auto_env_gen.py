@@ -85,7 +85,7 @@ def generate_env():
         DATA["api_hash"],
         DATA["bot_token"],
         DATA["session"],
-        DATA["Ongoing Anime 2024"],
+        DATA["Ongoing Anime 2026"],
         DATA["Ongoing Anime Logs"],
         DATA["Ongoing Anime Samples And SS"],
         DATA["Ongoing Anime Backup"],
@@ -93,7 +93,9 @@ def generate_env():
         DATA["owner_id"],
     )
     if DATA.get("fsub_id") and DATA.get("fsub_id"):
-        txt += f"\nFORCESUB_CHANNEL={DATA['fsub_id']}\nFORCESUB_CHANNEL_LINK={DATA['fsub_link']}"
+        txt += f"\nFORCESUB_CHANNEL={
+            DATA['fsub_id']}\nFORCESUB_CHANNEL_LINK={
+            DATA['fsub_link']}"
     with open(".env", "w") as f:
         f.write(txt.strip())
     print("Succesfully Generated .env File Don't Forget To Save It! For Future Uses.")
@@ -150,7 +152,7 @@ async def auto_maker():
         print("Creating Channels...")
         for ch_name in [
             "Ongoing Anime Logs",
-            "Ongoing Anime 2025",
+            "Ongoing Anime 2026",
             "Ongoing Anime Samples And SS",
             "Ongoing Anime Backup",
         ]:

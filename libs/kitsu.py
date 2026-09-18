@@ -1,5 +1,5 @@
 #    This file is part of the AutoAnime distribution.
-#    Copyright (c) 2025 Kaif_00z
+#    Copyright (c) 2026 Kaif_00z
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -27,7 +27,8 @@ class RawAnimeInfo:
 
     async def _get_session(self) -> aiohttp.ClientSession:
         if self._session is None or self._session.closed:
-            self._session = aiohttp.ClientSession()
+            timeout = aiohttp.ClientTimeout(total=30, connect=10)
+            self._session = aiohttp.ClientSession(timeout=timeout)
         return self._session
 
     async def close(self):
@@ -78,7 +79,7 @@ class RawAnimeInfo:
                         res_data["data"]["attributes"]["endDate"]
                         or res_data["data"]["attributes"]["startDate"]
                     ):
-                        if "2025" not in (
+                        if "2026" not in (
                             res_data["data"]["attributes"]["endDate"] or ""
                         ):
                             if all(
@@ -86,10 +87,10 @@ class RawAnimeInfo:
                                 not in (
                                     res_data["data"]["attributes"]["startDate"] or ""
                                 )
-                                for year in ["2024", "2025"]
+                                for year in ["2024", "2025", "2026"]
                             ):
                                 continue
-                return res_data
+                    return res_data
         except Exception:
             raise ValueError("Kitsu: Search Link Not Found")
 

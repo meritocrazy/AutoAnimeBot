@@ -1,5 +1,5 @@
 #    This file is part of the AutoAnime distribution.
-#    Copyright (c) 2025 Kaif_00z
+#    Copyright (c) 2026 Kaif_00z
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -38,16 +38,14 @@ LOGS = logging.getLogger("AutoAnimeBot")
 TelethonLogger = logging.getLogger("Telethon")
 TelethonLogger.setLevel(logging.INFO)
 
-LOGS.info(
-    f"""
+LOGS.info(f"""
                             Auto Anime Bot
                 ©️ t.me/kAiF_00z (github.com/kaif-00z)
                         {Var.__version__} (original)
-                             (2023-25)
+                             (2023-26)
                         [All Rigths Reserved]
 
-    """
-)
+    """)
 
 
 class Reporter:

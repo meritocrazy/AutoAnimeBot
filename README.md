@@ -133,14 +133,13 @@ python3 bot.py
 ## 📖 Usage
 
 ### User Commands
+
 | Command | Description |
 |---------|-------------|
 | `/start` | Shows welcome message (owner sees admin panel) |
 | `/start <msg_id>` | Retrieves file from backup channel (button upload) |
 | `/start <hash>` | Retrieves screenshots & sample (hash from button) |
 | `/about` | Shows bot stats & system info |
-
-### Admin Panel (Owner only — click `/start`)
 - 📜 **LOGS** — View recent log file
 - ♻️ **Restart** — Graceful restart
 - 🎞️ **Encode Toggle** — Switch between original upload / HEVC encode

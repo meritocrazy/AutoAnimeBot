@@ -1,5 +1,5 @@
 #    This file is part of the AutoAnime distribution.
-#    Copyright (c) 2025 Kaif_00z
+#    Copyright (c) 2026 Kaif_00z
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ from decouple import config
 class Var:
     # Version
 
-    __version__ = "v0.1@stable.july"
+    __version__ = "v0.2"
 
     # Telegram Credentials
 
@@ -55,7 +55,4 @@ class Var:
     RESTART_EVERDAY = config("RESTART_EVERDAY", default=True, cast=bool)
     LOG_ON_MAIN = config("LOG_ON_MAIN", default=False, cast=bool)
     FORCESUB_CHANNEL_LINK = config("FORCESUB_CHANNEL_LINK", default="", cast=str)
-
-    # Dev Configs
-
-    DEV_MODE = config("DEV_MODE", default=False, cast=bool)
+    DELETE_FILES_FROM_PMS = config("DELETE_FILES_FROM_PMS", default=True, cast=bool)

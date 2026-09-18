@@ -1,5 +1,5 @@
 #    This file is part of the AutoAnime distribution.
-#    Copyright (c) 2025 Kaif_00z
+#    Copyright (c) 2026 Kaif_00z
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 # credit to t.me/kAiF_00z (github.com/kaif-00z)
 
 import asyncio
+import hashlib
 import json
 import math
 import os
@@ -45,10 +46,10 @@ class Tools:
         self._http_session: aiohttp.ClientSession | None = None
 
     async def _get_session(self) -> aiohttp.ClientSession:
-            if self._http_session is None or self._http_session.closed:
-                timeout = aiohttp.ClientTimeout(total=30, connect=10)
-                self._http_session = aiohttp.ClientSession(timeout=timeout)
-            return self._http_session
+        if self._http_session is None or self._http_session.closed:
+            timeout = aiohttp.ClientTimeout(total=30, connect=10)
+            self._http_session = aiohttp.ClientSession(timeout=timeout)
+        return self._http_session
 
     async def close_session(self):
         if self._http_session and not self._http_session.closed:
@@ -89,9 +90,13 @@ class Tools:
             if not link:
                 return None
             image = await self.async_searcher(link, re_content=True)
-            fn = f"thumbs/{link.split('/')[-1]}"
-            if not fn.endswith((".jpg", ".png")):
-                fn += ".jpg"
+            clean_link = link.split("?")[0]
+            filename = clean_link.split("/")[-1]
+            if len(filename) > 30 or not filename.lower().endswith(
+                (".jpg", ".png", ".jpeg")
+            ):
+                filename = hashlib.md5(link.encode()).hexdigest() + ".jpg"
+            fn = f"thumbs/{filename}"
             async with aiofiles.open(fn, "wb") as file:
                 await file.write(image)
             return fn
@@ -101,8 +106,10 @@ class Tools:
 
     async def mediainfo(self, file, bot):
         try:
-            process = await asyncio.create_subprocess_shell(
-                f'mediainfo """{file}""" --Output=HTML',
+            process = await asyncio.create_subprocess_exec(
+                "mediainfo",
+                file,
+                "--Output=HTML",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -158,15 +165,15 @@ class Tools:
             os.mkdir("downloads/")
 
     def hbs(self, size):
-            if not size:
-                return ""
-            power = 2**10
-            raised_to_pow = 0
-            dict_power_n = {0: "", 1: "K", 2: "M", 3: "G", 4: "T", 5: "P"}
-            while size > power:
-                size /= power
-                raised_to_pow += 1
-            return str(round(size, 2)) + " " + dict_power_n[raised_to_pow] + "B"
+        if not size:
+            return ""
+        power = 2**10
+        raised_to_pow = 0
+        dict_power_n = {0: "", 1: "K", 2: "M", 3: "G", 4: "T", 5: "P"}
+        while size > power:
+            size /= power
+            raised_to_pow += 1
+        return str(round(size, 2)) + " " + dict_power_n[raised_to_pow] + "B"
 
     def ts(self, milliseconds: int) -> str:
         seconds, milliseconds = divmod(int(milliseconds), 1000)
@@ -190,37 +197,37 @@ class Tools:
         return True, out
 
     async def bash_(self, cmd, run_code=0):
-            # Use create_subprocess_exec with explicit args to avoid shell injection
-            if isinstance(cmd, str):
-                # Split shell command into args (basic splitting, not full shell parsing)
-                import shlex
-                args = shlex.split(cmd)
-            else:
-                args = cmd
-            process = await asyncio.create_subprocess_exec(
-                *args,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            stdout, stderr = await process.communicate()
-            err = stderr.decode().strip() or None
-            out = stdout.decode().strip()
-            if not run_code and err:
-                if match := re.match(r"\/bin\/sh: (.*): ?(\w+): not found", err):
-                    return out, f"{match.group(2).upper()}_NOT_FOUND"
-            return out, err
+        # Use create_subprocess_exec with explicit args to avoid shell injection
+        if isinstance(cmd, str):
+            # Split shell command into args (basic splitting, not full shell parsing)
+            import shlex
+            args = shlex.split(cmd)
+        else:
+            args = cmd
+        process = await asyncio.create_subprocess_exec(
+            *args,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await process.communicate()
+        err = stderr.decode().strip() or None
+        out = stdout.decode().strip()
+        if not run_code and err:
+            if match := re.match(r"\/bin\/sh: (.*): ?(\w+): not found", err):
+                return out, f"{match.group(2).upper()}_NOT_FOUND"
+        return out, err
 
     async def frame_counts(self, dl):
-            # Use mediainfo directly without shell pipe
-            _x, _y = await self.bash_(["mediainfo", "--fullscan", dl])
-            if _y and _y.endswith("NOT_FOUND"):
-                LOGS.error(f"ERROR: `{_y}`")
-                return False
-            # Parse frame count from mediainfo output
-            for line in _x.split("\n"):
-                if "Frame count" in line:
-                    return line.split(":")[1].strip()
+        # Use mediainfo directly without shell pipe
+        _x, _y = await self.bash_(["mediainfo", "--fullscan", dl])
+        if _y and _y.endswith("NOT_FOUND"):
+            LOGS.error(f"ERROR: `{_y}`")
             return False
+        # Parse frame count from mediainfo output
+        for line in _x.split("\n"):
+            if "Frame count" in line:
+                return line.split(":")[1].strip()
+        return False
 
     async def compress(self, dl, out, log_msg):
         total_frames = await self.frame_counts(dl)
@@ -346,69 +353,69 @@ class Tools:
         return pin, pon
 
     async def gen_ss_sam(self, _hash, filename):
+        try:
+            ss_path, sp_path = None, None
+            os.mkdir(_hash)
+            tsec = await self.genss(filename)
+            fps = 10 / tsec
+            # Use create_subprocess_exec for ffmpeg screenshots
+            ncmd = [
+                "ffmpeg",
+                "-i",
+                filename,
+                "-vf",
+                f"fps={fps}",
+                "-vframes",
+                "10",
+                f"{_hash}/pic%01d.png",
+            ]
+            process = await asyncio.create_subprocess_exec(
+                *ncmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            )
+            await process.communicate()
+            ss, dd = await self.duration_s(filename)
+            __ = filename.split(".mkv")[-2]
+            out = __ + "_sample.mkv"
+            _ncmd = [
+                "ffmpeg",
+                "-i",
+                filename,
+                "-preset",
+                "ultrafast",
+                "-ss",
+                ss,
+                "-to",
+                dd,
+                "-c:v",
+                "libx265",
+                "-crf",
+                "27",
+                "-map",
+                "0:v",
+                "-c:a",
+                "aac",
+                "-map",
+                "0:a",
+                "-c:s",
+                "copy",
+                "-map",
+                "0:s?",
+                out,
+                "-y",
+            ]
+            process = await asyncio.create_subprocess_exec(
+                *_ncmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await process.communicate()
+            er = stderr.decode().strip()
             try:
-                ss_path, sp_path = None, None
-                os.mkdir(_hash)
-                tsec = await self.genss(filename)
-                fps = 10 / tsec
-                # Use create_subprocess_exec for ffmpeg screenshots
-                ncmd = [
-                    "ffmpeg",
-                    "-i",
-                    filename,
-                    "-vf",
-                    f"fps={fps}",
-                    "-vframes",
-                    "10",
-                    f"{_hash}/pic%01d.png",
-                ]
-                process = await asyncio.create_subprocess_exec(
-                    *ncmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-                )
-                await process.communicate()
-                ss, dd = await self.duration_s(filename)
-                __ = filename.split(".mkv")[-2]
-                out = __ + "_sample.mkv"
-                _ncmd = [
-                    "ffmpeg",
-                    "-i",
-                    filename,
-                    "-preset",
-                    "ultrafast",
-                    "-ss",
-                    ss,
-                    "-to",
-                    dd,
-                    "-c:v",
-                    "libx265",
-                    "-crf",
-                    "27",
-                    "-map",
-                    "0:v",
-                    "-c:a",
-                    "aac",
-                    "-map",
-                    "0:a",
-                    "-c:s",
-                    "copy",
-                    "-map",
-                    "0:s?",
-                    out,
-                    "-y",
-                ]
-                process = await asyncio.create_subprocess_exec(
-                    *_ncmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-                )
-                stdout, stderr = await process.communicate()
-                er = stderr.decode().strip()
-                try:
-                    if er:
-                        if not os.path.exists(out) or os.path.getsize(out) == 0:
-                            LOGS.error(str(er))
-                            return (ss_path, sp_path)
-                except Exception:
-                    pass
-                return _hash, out
-            except Exception as error:
-                LOGS.error(str(error))
-                LOGS.exception(format_exc())
+                if er:
+                    if not os.path.exists(out) or os.path.getsize(out) == 0:
+                        LOGS.error(str(er))
+                        return (ss_path, sp_path)
+            except Exception:
+                pass
+            return _hash, out
+        except Exception as error:
+            LOGS.error(str(error))
+            LOGS.exception(format_exc())
