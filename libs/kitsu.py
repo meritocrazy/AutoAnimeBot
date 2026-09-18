@@ -102,7 +102,7 @@ class RawAnimeInfo:
                 if maps.get("attributes", {}).get("externalSite") == "anilist/anime":
                     _data["anilist_id"] = maps.get("attributes", {}).get("externalId")
                     _data["anilist_poster"] = f"https://img.anili.st/media/{_data['anilist_id']}"
-                    __data = self.anilist_result(_data["anilist_id"])
+                    __data = await asyncio.to_thread(self.anilist_result, _data["anilist_id"])
                     return {**_data, **__data}
         except Exception:
             raise ValueError("Kitsu: Mapping Failed")

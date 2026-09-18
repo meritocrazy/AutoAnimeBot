@@ -167,7 +167,7 @@ class DataBase:
             The stored channel data or empty dict.
         """
         data = await self.channel_info_db.find_one({"_id": title})
-        if (data or {}).get(title):
+        if data and (data or {}).get("data"):
             return data["data"]
         return {}
 
@@ -221,7 +221,7 @@ class DataBase:
             The new state of the setting.
         """
         data = await self.opts_db.find_one({"_id": "SS_UPLOAD"})
-        _new = not (data or {}).get("switch", True)
+        _new = not (data or {}).get("switch", False)
         await self.opts_db.update_one(
             {"_id": "SS_UPLOAD"},
             {"$set": {"switch": _new}},
@@ -235,4 +235,4 @@ class DataBase:
             True if enabled, False otherwise.
         """
         data = await self.opts_db.find_one({"_id": "SS_UPLOAD"})
-        return (data or {}).get("switch", True)
+        return (data or {}).get("switch", False)
