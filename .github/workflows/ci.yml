@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg mediainfo aria2
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run linting (pylint)
+        run: |
+          pip install pylint
+          pylint --rcfile=pylint.rc core/ functions/ libs/ database/ bot.py || true
+
+      - name: Run tests
+        run: |
+          python -m pytest tests/ -v --tb=short
+        env:
+          API_ID: 12345
+          API_HASH: test_hash
+          BOT_TOKEN: test_token
+          MONGO_SRV: mongodb://localhost:27017
+          MAIN_CHANNEL: -1001234567890
+          LOG_CHANNEL: -1001234567891
+          CLOUD_CHANNEL: -1001234567892
+          OWNER: 123456789
+          CRF: 27
+          THUMBNAIL: https://example.com/thumb.jpg
+          FFMPEG: ffmpeg
+          SESSION: ""
+          BACKUP_CHANNEL: -1001111111111
+          FORCESUB_CHANNEL: 0
+          FORCESUB_CHANNEL_LINK: ""
+          SEND_SCHEDULE: "False"
+          RESTART_EVERDAY: "True"
+          LOG_ON_MAIN: "False"
+          DEV_MODE: "False"
+
+      - name: Check import errors
+        run: |
+          python -c "
+          import core.bot
+          import core.executors
+          import functions.tools
+          import functions.config
+          import functions.info
+          import functions.schedule
+          import functions.utils
+          import database
+          import libs.kitsu
+          import libs.ariawarp
+          import libs.logger
+          print('All imports successful')
+          "
+
+  docker-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: lint-and-test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build -t autoanimebot:test .
+
+      - name: Test Docker image runs
+        run: |
+          docker run --rm autoanimebot:test python -c "import bot; print('Docker image OK')"

@@ -209,10 +209,10 @@ async def anime(data):
                     continue
                 await reporter.report_error(_btn, log=True)
                 await reporter.msg.delete()
-            except BaseException:
+            except Exception:
                 await reporter.report_error(str(format_exc()), log=True)
                 await reporter.msg.delete()
-    except BaseException:
+    except Exception:
         LOGS.error(str(format_exc()))
 
 

@@ -26,7 +26,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from functions.config import Var
 from functions.info import AnimeInfo
 from functions.tools import Tools
-from libs.logger import LOGS, TelegramClient
+from telethon import TelegramClient
 
 
 class ScheduleTasks:
@@ -34,19 +34,19 @@ class ScheduleTasks:
         self.tools = Tools()
         self.bot = bot
         if Var.SEND_SCHEDULE or Var.RESTART_EVERDAY:
-            self.sch = AsyncIOScheduler(timezone="Asia/Kolkata")
-            if Var.SEND_SCHEDULE:
-                self.sch.add_job(
-                    self.anime_timing, "cron", hour=0, minute=30
-                )  # 12:30 AM IST
-            if Var.RESTART_EVERDAY:
-                self.sch.add_job(self.restart, "cron", hour=2, minute=1)  # 2:01 AM IST
-            self.sch.start()
+                    self.sch = AsyncIOScheduler(timezone="Asia/Kolkata")
+                    if Var.SEND_SCHEDULE:
+                        self.sch.add_job(
+                            self.anime_timing, "cron", hour=0, minute=30
+                        )  # 12:30 AM IST
+                    if Var.RESTART_EVERDAY:
+                        self.sch.add_job(self.restart, "cron", hour=2, minute=1)  # 2:01 AM IST
+                    self.sch.start()
 
     async def anime_timing(self):
         try:
             _res = await self.tools.async_searcher(
-                "https://subsplease.org/api/?f=schedule&h=true&tz=Asia/Kolkata"
+                "https://subsplease.org/api/?f=schedule&h=true&tz=Asia/Jakarta"
             )
             xx = json.loads(_res)
             xxx = xx["schedule"]
@@ -60,4 +60,8 @@ class ScheduleTasks:
             LOGS.error(str(error))
 
     def restart(self):
-        os.execl(sys.executable, sys.executable, "bot.py")
+            # Graceful shutdown: stop scheduler, then stop the bot's event loop
+            if hasattr(self, 'sch') and self.sch.running:
+                self.sch.shutdown(wait=False)
+            # Signal the bot to stop
+            self.bot.loop.call_soon_threadsafe(self.bot.loop.stop)

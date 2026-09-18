@@ -149,33 +149,34 @@ class AdminUtils:
             )
 
     async def broadcast_bt(self, e):
-        users = await self.db.get_broadcast_user()
-        await e.edit("**Please Use This Feature Responsibly ⚠️**")
-        await e.reply(
-            f"**Send a single Message To Broadcast 😉**\n\n**There are** `{len(users)}` **Users Currently Using Me👉🏻**.\n\nSend /cancel to Cancel Process."
-        )
-        async with e.client.conversation(e.sender_id) as cv:
-            reply = cv.wait_event(events.NewMessage(from_users=e.sender_id))
-            repl = await reply
-            await e.delete()
-            if repl.text and repl.text.startswith("/cancel"):
-                return await repl.reply("`Broadcast Cancelled`")
-        sent = await repl.reply("`🗣️ Broadcasting Your Post...`")
-        done, er = 0, 0
-        for user in users:
-            try:
-                if repl.poll:
-                    await repl.forward_to(int(user))
-                else:
-                    await e.client.send_message(int(user), repl.message)
-                await asyncio.sleep(0.2)
-                done += 1
-            except BaseException as ex:
-                er += 1
-                print(ex)
-        await sent.edit(
-            f"**Broadcast Completed To** `{done}` **Users.**\n**Error in** `{er}` **Users.**"
-        )
+            users = await self.db.get_broadcast_user()
+            await e.edit("**Please Use This Feature Responsibly ⚠️**")
+            await e.reply(
+                f"**Send a single Message To Broadcast 😉**\n\n**There are** `{len(users)}` **Users Currently Using Me👉🏻**.\n\nSend /cancel to Cancel Process."
+            )
+            async with e.client.conversation(e.sender_id) as cv:
+                reply = cv.wait_event(events.NewMessage(from_users=e.sender_id))
+                repl = await reply
+                await e.delete()
+                if repl.text and repl.text.startswith("/cancel"):
+                    return await repl.reply("`Broadcast Cancelled`")
+            sent = await repl.reply("`🗣️ Broadcasting Your Post...`")
+            done, er = 0, 0
+            for user in users:
+                try:
+                    # Check if the message has a poll
+                    if repl.poll is not None:
+                        await repl.forward_to(int(user))
+                    else:
+                        await e.client.send_message(int(user), repl.message)
+                    await asyncio.sleep(0.2)
+                    done += 1
+                except BaseException as ex:
+                    er += 1
+                    LOGS.error(f"Broadcast error for user {user}: {ex}")
+            await sent.edit(
+                f"**Broadcast Completed To** `{done}` **Users.**\n**Error in** `{er}` **Users.**"
+            )
 
     async def _about(self, e):
         total_docs = await self.db.file_store_db.count_documents({})

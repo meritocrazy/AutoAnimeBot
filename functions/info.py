@@ -45,7 +45,7 @@ class AnimeInfo:
         try:
             anime = (await self.kitsu.search(self.proper_name)) or {}
             return anime.get("english_title") or anime_name
-        except BaseException:
+        except Exception:
             LOGS.error(str(format_exc()))
             return anime_name.strip()
 
@@ -54,7 +54,7 @@ class AnimeInfo:
             if self.proper_name:
                 anime_poster = await self.kitsu.search(self.proper_name)
                 return anime_poster.get("poster_img") or None
-        except BaseException:
+        except Exception:
             LOGS.error(str(format_exc()))
 
     async def get_cover(self):
@@ -64,7 +64,7 @@ class AnimeInfo:
                 if anime_poster.get("anilist_id"):
                     return anime_poster.get("anilist_poster")
                 return None
-        except BaseException:
+        except Exception:
             LOGS.error(str(format_exc()))
 
     async def get_caption(self):
@@ -79,7 +79,7 @@ class AnimeInfo:
                         else "N/A"
                     ),
                 )
-        except BaseException:
+        except Exception:
             LOGS.error(str(format_exc()))
             return ""
 

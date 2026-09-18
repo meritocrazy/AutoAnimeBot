@@ -12,7 +12,7 @@
 #
 # License can be found in <
 # https://github.com/kaif-00z/AutoAnimeBot/blob/main/LICENSE > .
-
+#
 # if you are using this following code then don't forgot to give proper
 # credit to t.me/kAiF_00z (github.com/kaif-00z)
 # little bit inspired from pyUltroid.BaseClient
@@ -171,10 +171,10 @@ class Bot(TelegramClient):
                             chat_id, (await self.user_client.upload_file(logo))
                         )
                     )
-                except BaseException:
+                except Exception:
                     pass
             return chat_id
-        except BaseException:
+        except Exception:
             LOGS.error(format_exc())
 
     async def generate_invite_link(self, channel_id):
@@ -188,24 +188,35 @@ class Bot(TelegramClient):
                 )
             )
             return data.link
-        except BaseException:
+        except Exception:
             LOGS.error(format_exc())
 
     async def delete_after(self, messages, seconds: int = 600):  # 10 min
         await asyncio.sleep(seconds)
         # maybe floodwait?
         await asyncio.gather(*[msg.delete() for msg in messages])
-        # for msg in messages:
-        #     try:
-        #         await msg.delete()
-        #     except Exception:
-        #         pass
 
     def run_in_loop(self, function):
         return self.loop.run_until_complete(function)
 
     def run(self):
-        self.run_until_disconnected()
+        try:
+            self.run_until_disconnected()
+        finally:
+            # Cleanup on disconnect
+            self.run_in_loop(self.stop_client())
+
+    async def stop_client(self):
+        """Graceful shutdown of all clients."""
+        if self.user_client and self.user_client.is_connected():
+            await self.user_client.disconnect()
+        if self.pyro_client.is_connected:
+            await self.pyro_client.stop()
+        # Close aiohttp session if exists
+        from functions.tools import Tools
+
+        tools = Tools()
+        await tools.close_session()
 
     def add_handler(self, func, *args, **kwargs):
         if func in [_[0] for _ in self.list_event_handlers()]:

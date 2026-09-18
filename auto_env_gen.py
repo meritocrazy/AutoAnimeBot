@@ -74,7 +74,7 @@ async def create_channel(client, title):
 
         created_chat_id = r.chats[0].id
         return f"-100{created_chat_id}"
-    except BaseException:
+    except Exception:
         print("Unable to Create Channel...")
         sys.exit(1)
 
@@ -168,7 +168,7 @@ async def auto_maker():
                     add_admins=True,
                 )
                 DATA[ch_name] = chat_id
-            except BaseException:
+            except Exception:
                 print("Error While Creating Channel And Promoting Bot..")
                 print(format_exc())
                 sys.exit(1)

@@ -1,121 +1,274 @@
-[![Stars](https://img.shields.io/github/stars/kaif-00z/AutoAnimeBot?style=flat-square&color=yellow)](https://github.com/kaif-00z/AutoAnimeBot/stargazers)
-[![Forks](https://img.shields.io/github/forks/kaif-00z/AutoAnimeBot?style=flat-square&color=orange)](https://github.com/kaif-00z/AutoAnimeBotfork)
-[![Python](https://img.shields.io/badge/Python-v3.12.3-blue)](https://www.python.org/)
-[![CodeFactor](https://www.codefactor.io/repository/github/kaif-00z/autoanimebot/badge)](https://www.codefactor.io/repository/github/kaif-00z/autoanimebot)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/kaif-00z/AutoAnimeBot/graphs/commit-activity)
-[![Contributors](https://img.shields.io/github/contributors/kaif-00z/AutoAnimeBot?style=flat-square&color=green)](https://github.com/kaif-00z/AutoAnimeBot/graphs/contributors)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://makeapullrequest.com)
-[![License](https://img.shields.io/badge/license-GPLv3-blue)](https://github.com/kaif-00z/AutoAnimeBot/blob/main/LICENSE)   
-[![Sparkline](https://stars.medv.io/kaif-00z/AutoAnimeBot.svg)](https://stars.medv.io/kaif-00z/AutoAnimeBot)
+# AutoAnimeBot
 
-## Developer Note
+[![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![Tests](https://github.com/kaif-00z/AutoAnimeBot/actions/workflows/ci.yml/badge.svg)](https://github.com/kaif-00z/AutoAnimeBot/actions/workflows/ci.yml)
+[![Code Quality](https://github.com/kaif-00z/AutoAnimeBot/actions/workflows/pylint.yml/badge.svg)](https://github.com/kaif-00z/AutoAnimeBot/actions/workflows/pylint.yml)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](Dockerfile)
 
-- __This repository is not intended or supported for deployment on KOYEB.__
-- If Hosted On Heroku Then Make Sure You Are Using Premium Dynos Or Any Above then basic dynos.
-- If You Don't Have High End VPS like **8vcpu or 32GiB RAM** So Don't Deploy This Bot.
-- You Can Customize FFMPEG Code If You Know What You Are Doing.
-- __Ensure that you have adhered to this developer note before reporting any errors.__
+> **Auto-download, encode (HEVC/libx265), and upload ongoing anime from SubsPlease to Telegram — fully automated.**
 
-## Changelog Of Latest Update
+---
 
-### v0.1
-- Shifted To Mongo Database.
-- Changed Hashing Algo To SHA256.
-- Added About Command.
-- Added SS & MediaInfo On/Off
-- Added Separate Anime Channel Upload
-- <details><summary>Click Here To See How Separate Anime Channel Upload Look.</summary><img src="https://graph.org/file/a0636332545730a4d3d43.jpg" alt="sepul1"/><img src="https://graph.org/file/3eb0b86609469f385f4b5.jpg" alt="sepul2"/></details>
-- Added Button Upload Support (File Store)
-- <details><summary>Click Here To See How Button Upload Look.</summary><img src="https://graph.org/file/3e9abc9ec7de6a26fd1a1.jpg" alt="btnul"/></details>
-- Added Multi Thread Encoding
-- Added Progress Bar of Encoding
-- Added Option For Logs In Main Channel
-- Added ForceSub
-- Added 480p Support
-- Added Broadcast
-- Major Modification In FFMPEG Code.
-- Modified Anime Searcher
-- Admin Panel Fixed
-- ReWritten Whole Program (Fully OOPs Based)
-- Optimized Core
-- Added Heroku Support
-- Added Custom CRF Support
+## ✨ Features
 
-## Contributing
+| Feature | Description |
+|---------|-------------|
+| **Auto-download** | Fetches new episodes from SubsPlease via magnets (aria2c) |
+| **HEVC Encoding** | Compresses to libx265 with configurable CRF (20–51) + progress bar |
+| **Multi-quality** | 480p, 720p, 1080p — all handled automatically |
+| **Smart upload** | Pyrogram for >2GB files, Telethon for metadata & buttons |
+| **Separate channels** | Creates per-anime channels with invite links (requires `SESSION`) |
+| **Button upload** | File-store style: episode buttons → backup channel (10-min auto-delete) |
+| **Screenshots & MediaInfo** | Auto-generates 10 screenshots + sample clip + MediaInfo telegraph page |
+| **Force Subscribe** | Require users to join a channel before using the bot |
+| **Broadcast** | Admin can broadcast messages to all users |
+| **Daily schedule** | Posts airing schedule at 00:30 IST (optional) |
+| **Admin panel** | Inline keyboard to toggle features at runtime |
+| **MongoDB state** | Tracks uploaded episodes, channel info, user broadcasts, options |
 
-- Any Sort of Contributions are Welcomed!
-- Try To Resove Any Task From ToDo List Or Raise A Issue!
+---
 
-## How to deploy?
-<p><a href="https://www.youtube.com/live/hWf7DN3nN_c"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
+## 🏗 Architecture
 
-### Fork Repo Then click on below button of ur fork repo.
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+```
+┌─────────────────┐     ┌──────────────┐     ┌─────────────┐
+│  SubsPlease RSS │────▶│  Torrent DL  │────▶│  FFmpeg     │
+│  (magnet links) │     │  (aria2c)    │     │  (libx265)  │
+└─────────────────┘     └──────────────┘     └──────┬──────┘
+                                                     │
+┌─────────────────┐     ┌──────────────┐            ▼
+│  MongoDB        │◀───│  Executors   │────▶┌─────────────┐
+│  (state, opts)  │     │  (encode,    │     │  Telegram   │
+└─────────────────┘     │   upload)    │     │  (Pyrogram  │
+                        └──────────────┘     │  + Telethon)│
+                                             └─────────────┘
+```
 
-## Developer Note
+**Clients:**
+- **Telethon (bot)** — commands, callbacks, metadata, progress updates
+- **Telethon (user)** — channel creation, invite links (needs `SESSION`)
+- **Pyrogram** — large file uploads (>2GB support)
 
-- If Hosted On Heroku Then Encoding Of Per Episode Will Take Around 20mins.
-- If You Don't Have High End VPS like 8vcpu or 32GiB RAM So Don't Deploy This Bot.
-- You Can Customize FFMPEG Code If You Know What You Are Doing.
+---
 
-## Environmental Variable
+## 🚀 Quick Start
 
-### REQUIRED VARIABLES
+### Prerequisites
+- Python 3.12+
+- FFmpeg with libx265 support
+- mediainfo, aria2c
+- MongoDB (Atlas or self-hosted)
+- Telegram API credentials ([my.telegram.org](https://my.telegram.org))
+- Bot token ([@BotFather](https://t.me/BotFather))
 
-- `BOT_TOKEN` - Get This From @Botfather In Telegram.
+### 1. Clone & Configure
+```bash
+git clone https://github.com/kaif-00z/AutoAnimeBot.git
+cd AutoAnimeBot
+cp .sample.env .env
+nano .env   # fill in all REQUIRED variables
+```
 
-- `MONGO_SRV` - Get This From mongodb.com .
+### 2. Run with Docker (Recommended)
+```bash
+docker build -t autoanimebot .
+docker run -d --name autoanimebot --env-file .env autoanimebot
+```
 
-- `MAIN_CHANNEL` - ID of Channel Where Anime Will Upload.
+### 3. Run on VPS (Native)
+```bash
+# Install deps (Ubuntu/Debian)
+sudo apt update && sudo apt install -y ffmpeg mediainfo aria2 python3-pip
 
-- `CLOUD_CHANNEL` - ID of Channel Where Samples And Screenshots Of Anime Will Be Uploaded.
+# Install Python deps
+pip install -r requirements.txt
 
-- `LOG_CHANNEL` - ID of Channel Where Status Of Proccesses Will Be Shown.
+# Run
+python3 bot.py
+```
 
-- `OWNER` - ID of Owner.
+### 4. Deploy to Heroku
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/kaif-00z/AutoAnimeBot)
 
-### OPTIONAL VARIABLES
+> ⚠️ Heroku: Use **Performance-M** or higher dyno. Encoding takes ~20 min/episode on basic dynos. Set `RESTART_EVERDAY=False`.
 
-- `SESSION` - Telethon Session String Of Your Telegram Account.
+---
 
-- `BACKUP_CHANNEL` - ID of Channel Where Anime Will Be Saved As BackUP if You Are Using Button Upload Option Then Make Sure To SET Backup Channel.
+## ⚙️ Configuration
 
-- `FORCESUB_CHANNEL` - ID of Channel Where You Want The User To Join (Make Sure You Promoted The Bot in that channel).
+### Required Variables
 
-- `FORCESUB_CHANNEL_LINK` - Link of Channel Via User Join The `FORCESUB_CHANNEL`.
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `API_ID` | Telegram API ID | `123456` |
+| `API_HASH` | Telegram API Hash | `abcdef123456` |
+| `BOT_TOKEN` | Bot token from @BotFather | `123456:ABC-DEF...` |
+| `MONGO_SRV` | MongoDB connection string | `mongodb+srv://user:pass@cluster.mongodb.net` |
+| `MAIN_CHANNEL` | Main upload channel ID | `-1001234567890` |
+| `LOG_CHANNEL` | Log channel ID | `-1001234567891` |
+| `CLOUD_CHANNEL` | Screenshots/samples channel | `-1001234567892` |
+| `BACKUP_CHANNEL` | Button upload backup channel | `-1001234567893` |
+| `OWNER` | Your Telegram user ID | `123456789` |
 
-- `THUMBNAIL` - JPG/PNG Link of Thumbnail FIle.
+### Optional Variables
 
-- `FFMPEG` - You Can Set Custom Path Of ffmpeg if u want, default is `ffmpeg`.
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SESSION` | — | Telethon string session (for separate channels) |
+| `FORCESUB_CHANNEL` | — | Force-sub channel ID |
+| `FORCESUB_CHANNEL_LINK` | — | Force-sub channel invite link |
+| `THUMBNAIL` | Graph.org image | Default thumbnail URL |
+| `FFMPEG` | `ffmpeg` | Custom ffmpeg binary path |
+| `CRF` | `27` | Encoding quality (20–51, lower = better) |
+| `SEND_SCHEDULE` | `False` | Post daily schedule at 00:30 IST |
+| `RESTART_EVERDAY` | `True` | Restart daily at 02:01 IST |
+| `LOG_ON_MAIN` | `False` | Send logs to MAIN_CHANNEL |
+| `DEV_MODE` | `False` | Use more CPU threads for encoding |
 
-- `LOG_ON_MAIN` - `True/False` It Will Send LOGS in `MAIN_CHANNEL` rather than `LOG_CHANNEL`, default is `False`
+> **Get Channel IDs:** Forward a message from the channel to [@userinfobot](https://t.me/userinfobot)
 
-- `SEND_SCHEDULE` - `True/False` Send Schedule of Upcoming Anime of that day at 00:30 **IST**, default is `False`.
+---
 
-- `RESTART_EVERDAY` - `True/False` It Will Restart The Bot Everyday At 00:30 **IST**, default is `True`.
+## 📖 Usage
 
-- `CRF` - Less CRF == High Quality, More Size , More CRF == Low Quality, Less Size, CRF Range = 20-51.
+### User Commands
+| Command | Description |
+|---------|-------------|
+| `/start` | Shows welcome message (owner sees admin panel) |
+| `/start <msg_id>` | Retrieves file from backup channel (button upload) |
+| `/start <hash>` | Retrieves screenshots & sample (hash from button) |
+| `/about` | Shows bot stats & system info |
 
-## Deployment In VPS
+### Admin Panel (Owner only — click `/start`)
+- 📜 **LOGS** — View recent log file
+- ♻️ **Restart** — Graceful restart
+- 🎞️ **Encode Toggle** — Switch between original upload / HEVC encode
+- 📸 **SS Toggle** — Enable/disable screenshots & MediaInfo
+- 🔘 **Button Upload Toggle** — File-store style upload
+- 🗃️ **Separate Channel Toggle** — Per-anime channels (needs `SESSION`)
+- 🔊 **Broadcast** — Send message to all users
 
-- `git clone https://github.com/kaif-00z/AutoAnimeBot.git`
+---
 
-- `nano .env` configure env as per [this](https://github.com/kaif-00z/AutoAnimeBot/blob/main/.sample.env) or  using [this](https://github.com/kaif-00z/AutoAnimeBot/blob/main/auto_env_gen.py).
+## 🔧 Development
 
-- `sudo docker build . -t ongoing` (make sure to install docker first using `sudo apt install docker.io`)
+### Run Tests
+```bash
+pip install pytest pytest-asyncio
+python -m pytest tests/ -v
+```
 
-- `sudo docker run ongoing`
+### Verify Imports
+```bash
+API_ID=123456 API_HASH=abcdef BOT_TOKEN=123:abc MONGO_SRV=mongodb://localhost MAIN_CHANNEL=-100 LOG_CHANNEL=-100 CLOUD_CHANNEL=-100 BACKUP_CHANNEL=-100 OWNER=123 python -c "
+import sys
+sys.path.insert(0, '.')
+from core.bot import Bot
+from functions.tools import Tools
+from functions.config import Var
+from database import DataBase
+from libs.kitsu import RawAnimeInfo
+from libs.ariawarp import Torrent
+from functions.schedule import ScheduleTasks
+from functions.info import AnimeInfo
+print('All imports successful!')
+```
 
-## Commands
+### Lint & Format
+```bash
+pip install black isort autoflake pylint
+black --line-length 120 .
+isort --profile black --line-length 120 .
+autoflake --recursive --remove-all-unused-imports --remove-unused-variables .
+pylint --rcfile=pylint.rc core/ functions/ libs/ database/ bot.py
+```
 
-[![Comand](https://files.catbox.moe/utcf3f.jpg)](https://github.com/kaif-00z/AutoAnimeBot/)
+### Project Structure
+```
+AutoAnimeBot/
+├── bot.py                 # Entry point, event handlers
+├── core/
+│   ├── bot.py             # TelegramClient wrapper (Telethon + Pyrogram + user)
+│   └── executors.py       # Encoding & upload orchestration
+├── functions/
+│   ├── config.py          # Environment config (Var class)
+│   ├── tools.py           # FFmpeg, mediainfo, telegraph, HTTP, fs utils
+│   ├── info.py            # Anime metadata (anitopy + Kitsu + AniList)
+│   ├── schedule.py        # APScheduler jobs (schedule, restart)
+│   └── utils.py           # Admin panel, broadcast, about
+├── database/
+│   └── __init__.py        # MongoDB (motor) collections & indexes
+├── libs/
+│   ├── kitsu.py           # Kitsu + AniList API client (pooled) — class: RawAnimeInfo
+│   ├── ariawarp.py        # aria2c wrapper (secure)
+│   └── logger.py          # Logging + Reporter (progress messages)
+├── tests/
+│   └── test_tools.py      # Unit tests (30+)
+├── .github/workflows/     # CI: test, lint, docker build
+├── Dockerfile             # Multi-stage build
+├── requirements.txt       # Python deps
+└── .sample.env            # Documented environment template
+```
 
-**Uploading of Ongoing Animes Is Automatic**
+---
 
-<!-- ## About
+## 🐛 Troubleshooting
 
-- This Bot Is Currently Running In [This Channel](https://t.me/+q_OBZiXjkBFkYzk0) . -->
+| Issue | Solution |
+|-------|----------|
+| `ApiIdInvalidError` | Check `API_ID`/`API_HASH` match my.telegram.org |
+| `AccessTokenInvalidError` | Regenerate `BOT_TOKEN` from @BotFather |
+| `String session expired` | Generate new `SESSION` (see below) |
+| `mediainfo not found` | `sudo apt install mediainfo` |
+| `aria2c not found` | `sudo apt install aria2` |
+| Encoding fails | Check FFmpeg has libx265: `ffmpeg -encoders \| grep libx265` |
+| MongoDB timeout | Whitelist IP in Atlas; check `MONGO_SRV` format |
+| FloodWait errors | Bot handles automatically; check `LOG_CHANNEL` |
 
-## Donate
+### Generate Telethon Session String
+```bash
+python3 -c "
+from telethon.sync import TelegramClient
+from telethon.sessions import StringSession
+api_id = 123456  # YOUR API_ID
+api_hash = 'your_api_hash'
+with TelegramClient(StringSession(), api_id, api_hash) as client:
+    print(client.session.save())
+"
+```
 
-- [Contact me on Telegram](t.me/kaif_00z) if you would like to donate me for my work!
+---
+
+## 🤝 Contributing
+
+1. Fork the repo
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Run tests & lint (`pytest tests/ && black --check .`)
+4. Commit changes (`git commit -m 'Add amazing feature'`)
+5. Push & open a PR
+
+> **Ideas:** See [Issues](https://github.com/kaif-00z/AutoAnimeBot/issues) or improve test coverage, add AniList GraphQL metadata, migrate to yt-dlp for downloads.
+
+---
+
+## 📄 License
+
+GPLv3 — see [LICENSE](LICENSE).
+
+---
+
+## 🙏 Credits
+
+- [SubsPlease](https://subsplease.org/) — source of anime releases
+- [Kitsu.io](https://kitsu.io/) & [AniList](https://anilist.co/) — metadata APIs
+- [Pyrogram](https://pyrogram.org/) & [Telethon](https://telethon.dev/) — Telegram clients
+- [FFmpeg](https://ffmpeg.org/) — encoding backbone
+
+---
+
+## ⭐ Support
+
+If this project helps you, consider giving it a ⭐ on GitHub!
+
+[![Donate](https://img.shields.io/badge/Donate-Telegram-blue?logo=telegram)](https://t.me/kaif_00z)

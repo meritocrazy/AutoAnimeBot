@@ -28,9 +28,9 @@ from functions.config import Var
 logging.basicConfig(
     format="%(asctime)s || %(name)s [%(levelname)s] : %(message)s",
     handlers=[
-        logging.FileHandler("AutoAnimeBot.log", mode="w", encoding="utf-8"),
-        logging.StreamHandler(),
-    ],
+            logging.FileHandler("AutoAnimeBot.log", mode="a", encoding="utf-8"),
+            logging.StreamHandler(),
+        ],
     level=logging.INFO,
     datefmt="%m/%d/%Y, %H:%M:%S",
 )
@@ -90,7 +90,7 @@ class Reporter:
             self.msg = await self.msg.edit(
                 f"**Successfully Completed All Task Related To The Anime**\n\n **File Name:** ```{self.file_name}```\n\n**STATUS:** `DONE`"
             )
-        except BaseException:
+        except Exception:
             pass  # ValueError Sometimes From telethon
         if Var.LOG_ON_MAIN:
             await self.msg.delete()
@@ -102,7 +102,7 @@ class Reporter:
     async def report_error(self, msg, log=False):
         txt = f"[ERROR] {msg}"
         if log:
-            LOGS.error(txt[0])
+                    LOGS.error(txt)
         try:
             await self.client.send_message(Var.LOG_CHANNEL, f"```{txt[:4096]}```")
         except FloodWaitError as fwerr:

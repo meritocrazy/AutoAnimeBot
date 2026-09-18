@@ -29,17 +29,38 @@ class DataBase:
     def __init__(self):
         try:
             LOGS.info("Trying To Connect With MongoDB")
-            self.client = AsyncIOMotorClient(Var.MONGO_SRV)
+            self.client = AsyncIOMotorClient(
+                Var.MONGO_SRV,
+                maxPoolSize=50,
+                minPoolSize=10,
+                maxIdleTimeMS=30000,
+                connectTimeoutMS=10000,
+                serverSelectionTimeoutMS=10000,
+            )
             self.file_info_db = self.client["ONGOINGANIME"]["fileInfo"]
             self.channel_info_db = self.client["ONGOINGANIME"]["animeChannelInfo"]
             self.opts_db = self.client["ONGOINGANIME"]["opts"]
             self.file_store_db = self.client["ONGOINGANIME"]["fileStore"]
             self.broadcast_db = self.client["ONGOINGANIME"]["broadcastInfo"]
             LOGS.info("Successfully Connected With MongoDB")
+            # Create indexes in background
+            self._create_indexes()
         except Exception as error:
             LOGS.exception(format_exc())
             LOGS.critical(str(error))
             sys.exit(1)
+
+    def _create_indexes(self):
+        """Create database indexes for better query performance."""
+        try:
+            # Unique index on _id is automatic, but we can add others
+            self.opts_db.create_index("_id", unique=True)
+            self.file_store_db.create_index("_id", unique=True)
+            self.broadcast_db.create_index("_id", unique=True)
+            self.channel_info_db.create_index("_id", unique=True)
+            self.file_info_db.create_index("_id", unique=True)
+        except Exception:
+            LOGS.error(format_exc())
 
     async def add_anime(self, uid):
         data = await self.file_info_db.find_one({"_id": uid})

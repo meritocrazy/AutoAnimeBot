@@ -92,7 +92,7 @@ class Executors:
             self.msg_id = msg.id
             return True, []
 
-        except BaseException:
+        except Exception:
             await self.reporter.report_error(str(format_exc()), log=True)
             return False, str(format_exc())
 
@@ -140,7 +140,7 @@ class Executors:
             await msg.edit(buttons=btns)
             await self.reporter.all_done()
 
-        except BaseException:
+        except Exception:
             await self.reporter.report_error(str(format_exc()), log=True)
 
         finally:

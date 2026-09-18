@@ -17,15 +17,21 @@
 # credit to t.me/kAiF_00z (github.com/kaif-00z)
 
 import asyncio
+import shlex
 
 
 class Torrent:
     def __init__(self) -> None:
-        self.cmd = """aria2c '''{link}''' -x 10 -j 10 --seed-time=0 -d '{path}'"""
+        # Use list format for create_subprocess_exec to avoid shell injection
+        self.cmd_template = ["aria2c", "-x", "10", "-j", "10", "--seed-time=0"]
 
     async def bash(self, cmd):
-        process = await asyncio.create_subprocess_shell(
-            cmd,
+        if isinstance(cmd, str):
+            args = shlex.split(cmd)
+        else:
+            args = cmd
+        process = await asyncio.create_subprocess_exec(
+            *args,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
@@ -35,4 +41,5 @@ class Torrent:
         return out, err
 
     async def download_magnet(self, link: str, path: str):
-        await self.bash(self.cmd.format(link=link, path=path))
+        cmd = self.cmd_template + ["-d", path, link]
+        await self.bash(cmd)

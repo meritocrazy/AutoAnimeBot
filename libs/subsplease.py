@@ -40,7 +40,7 @@ class SubsPlease:
         LOGS.info("Stopping The Bot...")
         try:
             [shutil.rmtree(fold) for fold in ["downloads", "thumbs", "encode"]]
-        except BaseException:
+        except Exception:
             LOGS.error(format_exc())
         sys.exit(0)
 
@@ -53,7 +53,7 @@ class SubsPlease:
             )
         except KeyboardInterrupt:
             self._exit()
-        except BaseException:
+        except Exception:
             LOGS.error(format_exc())
             return None, None, None
 
@@ -79,7 +79,7 @@ class SubsPlease:
                     uid = self.digest(f1080.title + f720.title + f480.title)
                     if not await self.db.is_anime_uploaded(uid):
                         return {"uid": uid, "1080p": f1080, "720p": f720, "480p": f480}
-            except BaseException:
+            except Exception:
                 LOGS.error(format_exc())
                 return None
 

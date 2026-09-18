@@ -1,0 +1,288 @@
+[MASTER]
+load-plugins=
+ignore=tests,venv,.git,__pycache__,.pytest_cache,assest
+ignore-patterns=.*\.pyc$
+
+[MESSAGES CONTROL]
+disable=
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    too-few-public-methods,
+    too-many-arguments,
+    too-many-locals,
+    too-many-branches,
+    too-many-statements,
+    too-many-instance-attributes,
+    too-many-public-methods,
+    too-many-lines,
+    line-too-long,
+    trailing-whitespace,
+    trailing-newlines,
+    wildcard-import,
+    unused-import,
+    unused-variable,
+    unused-argument,
+    redefined-outer-name,
+    redefined-builtin,
+    broad-except,
+    bare-except,
+    logging-fstring-interpolation,
+    f-string-missing-format-key,
+    consider-using-f-string,
+    consider-using-with,
+    consider-using-get,
+    consider-using-dict-items,
+    consider-using-enumerate,
+    consider-iterating-dictionary,
+    pointless-string-statement,
+    unnecessary-pass,
+    duplicate-code,
+    invalid-name,
+    global-statement,
+    global-variable-not-assigned,
+    unused-wildcard-import,
+    wrong-import-order,
+    wrong-import-position,
+    import-outside-toplevel,
+    cyclic-import,
+    no-name-in-module,
+    import-error,
+    undefined-variable,
+    unsubscriptable-object,
+    unsupported-membership-test,
+    unsubscriptable-object,
+    no-member,
+    not-an-iterable,
+    not-callable,
+    not-context-manager,
+    not-async-context-manager,
+    unexpected-keyword-arg,
+    no-value-for-parameter,
+    too-many-keyword-args,
+    unexpected-keyword-arg,
+    redundant-keyword-arg,
+    missing-kwoa,
+    arguments-differ,
+    signature-differs,
+    bad-super-call,
+    arguments-renamed,
+    redefined-slots-in-subclass,
+    invalid-slots,
+    invalid-slots-object,
+    assignments-to-slots,
+    invalid-slots-in-subclass,
+    no-self-use,
+    no-self-argument,
+    no-method-argument,
+    no-classmethod-decorator,
+    no-staticmethod-decorator,
+    bad-classmethod-argument,
+    bad-staticmethod-argument,
+    bad-mcs-classmethod-argument,
+    bad-mcs-method-argument,
+    bad-classmethod-argument,
+    no-init,
+    super-init-not-called,
+    super-without-brackets,
+    bad-super-call,
+    redefined-builtin,
+    redefined-outer-name,
+    redefined-variable-type,
+    redefined-argument-from-local,
+    redefined-loop-name,
+    redefined-loop-name,
+    redefined-name,
+    redefined-argument,
+    redefined-argument-from-local,
+    redefined-builtin,
+    redefined-outer-name,
+    redefined-variable-type,
+    redefined-loop-name,
+    redefined-argument,
+    redefined-argument-from-local,
+    redefined-builtin,
+    redefined-outer-name,
+    redefined-variable-type,
+    redefined-loop-name,
+    redefined-argument,
+    redefined-argument-from-local,
+    redefined-builtin,
+    redefined-outer-name,
+    redefined-variable-type,
+    redefined-loop-name,
+    redefined-argument,
+    redefined-argument-from-local,
+    redefined-builtin,
+    redefined-outer-name,
+    redefined-variable-type,
+    redefined-loop-name,
+    redefined-argument,
+    redefined-argument-from-local,
+    redefined-builtin,
+    redefined-outer-name,
+    redefined-variable-type,
+    redefined-loop-name,
+    redefined-argument,
+    redefined-argument-from-local,
+    redefined-builtin,
+    redefined-outer-name,
+    redefined-variable-type,
+    redefined-loop-name,
+    redefined-argument,
+    redefined-argument-from-local,
+    redefined-builtin,
+    redefined-outer-name,
+    redefined-variable-type,
+    redefined-loop-name,
+    redefined-argument,
+    redefined-argument-from-local,
+    redefined-builtin,
+    redefined-outer-name,
+    redefined-variable-type,
+    redefined-loop-name,
+    redefined-argument,
+    redefined-argument-from-local,
+    redefined-builtin,
+    redefined-outer-name,
+    redefined-variable-type,
+    redefined-loop-name,
+    redefined-argument,
+    redefined-argument-from-local,
+    redefined-builtin,
+    redefined-outer-name,
+    redefined-variable-type,
+    redefined-loop-name,
+    redefined-argument,
+    redefined-argument-from-local
+
+enable=
+    syntax-error,
+    undefined-variable,
+    used-before-assignment,
+    unused-import,
+    unused-variable,
+    unused-argument,
+    import-error,
+    no-name-in-module,
+    wrong-import-order,
+    wrong-import-position,
+    cyclic-import,
+    broad-except,
+    bare-except,
+    logging-fstring-interpolation,
+    trailing-whitespace,
+    trailing-newlines,
+    line-too-long,
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    invalid-name,
+    bad-whitespace,
+    bad-indentation,
+    mixed-indentation,
+    missing-final-newline,
+    too-many-lines,
+    too-many-statements,
+    too-many-branches,
+    too-many-arguments,
+    too-many-locals,
+    too-many-instance-attributes,
+    too-many-public-methods,
+    too-few-public-methods,
+    consider-using-f-string,
+    consider-using-with,
+    consider-using-get,
+    consider-using-dict-items,
+    consider-using-enumerate,
+    consider-iterating-dictionary,
+    pointless-string-statement,
+    unnecessary-pass,
+    duplicate-code,
+    global-statement,
+    global-variable-not-assigned,
+    unused-wildcard-import,
+    no-member,
+    not-an-iterable,
+    not-callable,
+    not-context-manager,
+    not-async-context-manager,
+    unexpected-keyword-arg,
+    no-value-for-parameter,
+    too-many-keyword-args,
+    unexpected-keyword-arg,
+    redundant-keyword-arg,
+    missing-kwoa,
+    arguments-differ,
+    signature-differs,
+    bad-super-call,
+    arguments-renamed,
+    redefined-slots-in-subclass,
+    invalid-slots,
+    invalid-slots-object,
+    assignments-to-slots,
+    invalid-slots-in-subclass,
+    no-self-use,
+    no-self-argument,
+    no-method-argument,
+    no-classmethod-decorator,
+    no-staticmethod-decorator,
+    bad-classmethod-argument,
+    bad-staticmethod-argument,
+    bad-mcs-classmethod-argument,
+    bad-mcs-method-argument,
+    bad-classmethod-argument,
+    no-init,
+    super-init-not-called,
+    super-without-brackets,
+    bad-super-call
+
+[FORMAT]
+max-line-length=120
+indent-string='    '
+indent-after-paren=4
+expected-line-ending-format=LF
+max-module-lines=1000
+
+[SIMILARITIES]
+min-similarity-lines=4
+ignore-comments=yes
+ignore-docstrings=yes
+ignore-imports=no
+
+[DESIGN]
+max-args=6
+max-attributes=10
+max-branches=12
+max-locals=15
+max-parents=7
+max-public-methods=20
+max-module-lines=1000
+min-public-methods=2
+
+[CLASSES]
+ignore-interface-methods=is_
+defining-attr-methods=__init__,__new__,setUp,tearDown
+
+[IMPORTS]
+deprecated-modules=regsub,TERMIOS,Bastion,rexec,sets,stringold,urllib,urlparse,htmllib,sgmllib,cgi,BaseHTTPServer,Cookie,cookielib,cgitb,UserDict,UserList,UserString,anydbm,dumbdbm,dbhash,whichdb,md5,sha,audiodev,linuxaudiodev,sunaudiodev,toaiff,imageop,rgbimg,colorsys,imghdr,sndhdr,aifc,sunau,wave,chunk,ossaudiodev,spwd,grp,nis,crypt,resource,termios,tty,pty,posix,fcntl,pwd,grp,crypt,termios,pty,fcntl,pwd,grp
+import-graph=
+ext-import-graph=
+int-import-graph=
+known-standard-library=
+known-third-party=
+known-first-party=
+
+[LOGGING]
+logging-modules=logging
+logging-format-style=%
+logging-levels=DEBUG,INFO,WARNING,ERROR,CRITICAL
+
+[TYPECHECK]
+ignore-mixin-members=yes
+ignore-none=yes
+ignore-on-opaque-inference=yes
+allow-unpacking-inference=yes
+
+[FORMAT]
+max-line-length=120
