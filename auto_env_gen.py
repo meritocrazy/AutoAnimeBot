@@ -49,9 +49,7 @@ def get_mongo():
 
 
 def get_forcesub():
-    fsub_id = input(
-        "Enter ID of Channel Where You Want ForceSub\nNOTE: Bot Is Admin In That Channel: "
-    )
+    fsub_id = input("Enter ID of Channel Where You Want ForceSub\nNOTE: Bot Is Admin In That Channel: ")
     fsub_link = input("Enter Invite Link From Which Subs Will Join The FSUB Channel: ")
     if fsub_id and fsub_link:
         DATA["fsub_id"] = fsub_id
@@ -93,9 +91,7 @@ def generate_env():
         DATA["owner_id"],
     )
     if DATA.get("fsub_id") and DATA.get("fsub_id"):
-        txt += f"\nFORCESUB_CHANNEL={
-            DATA['fsub_id']}\nFORCESUB_CHANNEL_LINK={
-            DATA['fsub_link']}"
+        txt += f"\nFORCESUB_CHANNEL={DATA['fsub_id']}\nFORCESUB_CHANNEL_LINK={DATA['fsub_link']}"
     with open(".env", "w") as f:
         f.write(txt.strip())
     print("Succesfully Generated .env File Don't Forget To Save It! For Future Uses.")
@@ -104,9 +100,7 @@ def generate_env():
 async def auto_maker():
     string_session, api_id, api_hash = await generate_session_string()
     print(string_session)
-    async with TelegramClient(
-        StringSession(string_session), api_id, api_hash
-    ) as client:
+    async with TelegramClient(StringSession(string_session), api_id, api_hash) as client:
         print("Creating Bot Account...")
         who = await client.get_me()
         DATA["owner_id"] = who.id
@@ -123,17 +117,13 @@ async def auto_maker():
         await asyncio.sleep(1)
         isdone = (await client.get_messages(bf, limit=1))[0].text
         if isdone.startswith("That I cannot do.") or "20 bots" in isdone:
-            print(
-                "You Already Made 20 Bots In Your Current Account. You Have To Deleted One Bot To Run This Script."
-            )
+            print("You Already Made 20 Bots In Your Current Account. You Have To Deleted One Bot To Run This Script.")
             sys.exit(1)
         await client.send_message(bf, name)
         await asyncio.sleep(1)
         isdone = (await client.get_messages(bf, limit=1))[0].text
         if not isdone.startswith("Good."):
-            print(
-                "Please make a Bot from @BotFather and add it's token in BOT_TOKEN, as an env var and restart me."
-            )
+            print("Please make a Bot from @BotFather and add it's token in BOT_TOKEN, as an env var and restart me.")
             sys.exit(1)
         await client.send_message(bf, username)
         await asyncio.sleep(1)
@@ -182,9 +172,7 @@ async def auto_maker():
         fsub = get_forcesub()
         print("NOTE: Fsub config is optional!!!")
         if not fsub:
-            print(
-                "Generating .env Without FSUB Configs. Now You May Have To Add it Manually!"
-            )
+            print("Generating .env Without FSUB Configs. Now You May Have To Add it Manually!")
         generate_env()
 
 

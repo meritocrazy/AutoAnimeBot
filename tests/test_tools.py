@@ -1,6 +1,7 @@
-import pytest
 import os
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 # Mock environment variables before importing modules that use config
@@ -141,8 +142,8 @@ class TestAnimeInfo:
 class TestReporter:
     @pytest.mark.asyncio
     async def test_reporter_init(self):
-        from libs.logger import Reporter
         from core.bot import Bot
+        from libs.logger import Reporter
 
         mock_client = MagicMock(spec=Bot)
         mock_client.is_connected = MagicMock(return_value=True)
@@ -154,9 +155,9 @@ class TestReporter:
 
     @pytest.mark.asyncio
     async def test_alert_new_file_founded(self):
-        from libs.logger import Reporter
         from core.bot import Bot
         from functions.config import Var
+        from libs.logger import Reporter
 
         mock_client = MagicMock(spec=Bot)
         mock_client.is_connected = MagicMock(return_value=True)
@@ -210,8 +211,9 @@ class TestDatabase:
 class TestScheduleTasks:
     @pytest.mark.asyncio
     async def test_schedule_init(self):
-        from functions.schedule import ScheduleTasks
         from telethon import TelegramClient
+
+        from functions.schedule import ScheduleTasks
 
         mock_bot = MagicMock(spec=TelegramClient)
         mock_bot.loop = MagicMock()
@@ -225,9 +227,9 @@ class TestScheduleTasks:
 class TestAdminUtils:
     @pytest.mark.asyncio
     async def test_admin_panel_buttons(self):
-        from functions.utils import AdminUtils
-        from database import DataBase
         from core.bot import Bot
+        from database import DataBase
+        from functions.utils import AdminUtils
 
         mock_db = MagicMock(spec=DataBase)
         mock_bot = MagicMock(spec=Bot)
@@ -253,6 +255,7 @@ class TestToolsAsync:
     @pytest.fixture
     def tools(self):
         from functions.tools import Tools
+
         return Tools()
 
     @pytest.mark.asyncio
@@ -275,6 +278,7 @@ class TestToolsAsync:
     async def test_bash_not_found(self, tools):
         # Test command not found handling
         import platform
+
         if platform.system() == "Windows":
             # On Windows, nonexistent command raises FileNotFoundError
             with pytest.raises(FileNotFoundError):

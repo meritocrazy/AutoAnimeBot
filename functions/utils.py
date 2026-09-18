@@ -12,9 +12,11 @@
 #
 # License can be found in <
 # https://github.com/kaif-00z/AutoAnimeBot/blob/main/LICENSE > .
-
+#
 # if you are using this following code then don't forgot to give proper
 # credit to t.me/kAiF_00z (github.com/kaif-00z)
+
+"""Admin utilities for bot management and broadcasting."""
 
 import platform
 from datetime import datetime as dt
@@ -27,6 +29,7 @@ from telethon import events
 from core.bot import Bot, Var, asyncio
 from database import DataBase
 from functions.tools import Tools
+from libs.logger import LOGS
 
 ABOUT = """
 **⏱ Uptime** : `{}`
@@ -45,6 +48,8 @@ ABOUT = """
 
 
 class AdminUtils:
+    """Admin utilities for bot management."""
+
     def __init__(self, dB: DataBase, bot: Bot):
         self.db = dB
         self.bot = bot
@@ -56,60 +61,59 @@ class AdminUtils:
         self.started_at = dt.now()
 
     def admin_panel(self):
+        """Generate admin panel buttons."""
         btn = [
             [
                 Button.inline("📜 LOGS", data="slog"),
                 Button.inline("♻️ Restart", data="sret"),
             ],
             [
-                Button.inline("🎞️ Encode [Toogle]", data="entg"),
+                Button.inline("🎞️ Encode [Toggle]", data="entg"),
                 Button.inline("📸 SS [Toggle]", data="sstg"),
             ],
-            [Button.inline("🔘 Button Upload [Toogle]", data="butg")],
-            [Button.inline("🗃️ Separate Channel Upload [Toogle]", data="scul")],
+            [Button.inline("🔘 Button Upload [Toggle]", data="butg")],
+            [Button.inline("🗃️ Separate Channel Upload [Toggle]", data="scul")],
             [Button.inline("🔊 Broadcast", data="cast")],
         ]
         return btn
 
     def back_btn(self):
+        """Return back button."""
         return [[Button.inline("🔙", data="bek")]]
 
-    async def _logs(self, e):
+    async def logs(self, e):
+        """Show logs file."""
         await e.delete()
-        await e.reply(
-            file="AutoAnimeBot.log", thumb="thumb.jpg", buttons=self.back_btn()
-        )
+        await e.reply(file="AutoAnimeBot.log", thumb="thumb.jpg", buttons=self.back_btn())
 
-    async def _restart(self, e, schedule):
+    async def restart(self, e, schedule):
+        """Restart the bot."""
         await e.reply("`Restarting...`")
         schedule.restart()
 
-    async def _encode_t(self, e):
+    async def encode_t(self, e):
+        """Toggle original upload/compression."""
         if await self.db.is_original_upload():
             await self.db.toggle_original_upload()
-            return await e.edit(
-                "`Successfully On The Compression`", buttons=self.back_btn()
-            )
+            return await e.edit("`Successfully On The Compression`", buttons=self.back_btn())
         await self.db.toggle_original_upload()
-        return await e.edit(
-            "`Successfully Off The Compression`", buttons=self.back_btn()
-        )
+        return await e.edit("`Successfully Off The Compression`", buttons=self.back_btn())
 
-    async def _btn_t(self, e):
+    async def btn_t(self, e):
+        """Toggle button upload."""
         if await self.db.is_separate_channel_upload():
             return await e.edit(
-                "`You Can't On/Off The Button Upload When Seprate Channel Is Enabled`",
+                "`You Can't On/Off The Button Upload When Separate Channel Is Enabled`",
                 buttons=self.back_btn(),
             )
         if await self.db.is_button_upload():
             await self.db.toggle_button_upload()
-            return await e.edit(
-                "`Successfully Off The Button Upload`", buttons=self.back_btn()
-            )
+            return await e.edit("`Successfully Off The Button Upload`", buttons=self.back_btn())
         await self.db.toggle_button_upload()
         return await e.edit("`Successfully On The Upload`", buttons=self.back_btn())
 
-    async def _ss_t(self, e):
+    async def ss_t(self, e):
+        """Toggle screenshots/sample upload."""
         if await self.db.is_ss_upload():
             await self.db.toggle_ss_upload()
             await e.edit(
@@ -123,7 +127,8 @@ class AdminUtils:
                 buttons=self.back_btn(),
             )
 
-    async def _sep_c_t(self, e):
+    async def sep_c_t(self, e):
+        """Toggle separate channel upload."""
         if Var.SESSION:
             if await self.db.is_button_upload():
                 if await self.db.is_separate_channel_upload():
@@ -144,41 +149,43 @@ class AdminUtils:
                 )
         else:
             return await e.edit(
-                "`To Use The Separate Channel Upload First You Have To Add SESSION Variable in The Bot",
+                "`To Use The Separate Channel Upload First You Have To Add SESSION Variable in The Bot`",
                 buttons=self.back_btn(),
             )
 
     async def broadcast_bt(self, e):
-            users = await self.db.get_broadcast_user()
-            await e.edit("**Please Use This Feature Responsibly ⚠️**")
-            await e.reply(
-                f"**Send a single Message To Broadcast 😉**\n\n**There are** `{len(users)}` **Users Currently Using Me👉🏻**.\n\nSend /cancel to Cancel Process."
-            )
-            async with e.client.conversation(e.sender_id) as cv:
-                reply = cv.wait_event(events.NewMessage(from_users=e.sender_id))
-                repl = await reply
-                await e.delete()
-                if repl.text and repl.text.startswith("/cancel"):
-                    return await repl.reply("`Broadcast Cancelled`")
-            sent = await repl.reply("`🗣️ Broadcasting Your Post...`")
-            done, er = 0, 0
-            for user in users:
-                try:
-                    # Check if the message has a poll
-                    if repl.poll is not None:
-                        await repl.forward_to(int(user))
-                    else:
-                        await e.client.send_message(int(user), repl.message)
-                    await asyncio.sleep(0.2)
-                    done += 1
-                except BaseException as ex:
-                    er += 1
-                    LOGS.error(f"Broadcast error for user {user}: {ex}")
-            await sent.edit(
-                f"**Broadcast Completed To** `{done}` **Users.**\n**Error in** `{er}` **Users.**"
-            )
+        """Broadcast message to all users."""
+        users = await self.db.get_broadcast_user()
+        await e.edit("**Please Use This Feature Responsibly ⚠️**")
+        await e.reply(
+            "**Send a single Message To Broadcast 😉**\n\n"
+            "**There are** `{len(users)}` **Users Currently Using Me👉🏻**.\n\n"
+            "Send /cancel to Cancel Process."
+        )
+        async with e.client.conversation(e.sender_id) as cv:
+            reply = cv.wait_event(events.NewMessage(from_users=e.sender_id))
+            repl = await reply
+            await e.delete()
+            if repl.text and repl.text.startswith("/cancel"):
+                return await repl.reply("`Broadcast Cancelled`")
+        sent = await repl.reply("`🗣️ Broadcasting Your Post...`")
+        done, er = 0, 0
+        for user in users:
+            try:
+                # Check if the message has a poll
+                if repl.poll is not None:
+                    await repl.forward_to(int(user))
+                else:
+                    await e.client.send_message(int(user), repl.message)
+                await asyncio.sleep(0.2)
+                done += 1
+            except Exception as ex:
+                er += 1
+                LOGS.error("Broadcast error for user %s: %s", user, ex)
+        await sent.edit(f"**Broadcast Completed To** `{done}` **Users.**\n**Error in** `{er}` **Users.**")
 
-    async def _about(self, e):
+    async def about(self, e):
+        """Show about info."""
         total_docs = await self.db.file_store_db.count_documents({})
         total_users = await self.db.broadcast_db.count_documents({})
         text = ABOUT.format(

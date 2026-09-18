@@ -46,9 +46,7 @@ class Var:
 
     # Other Configs
 
-    THUMB = config(
-        "THUMBNAIL", default="https://graph.org/file/ad1b25807b81cdf1dff65.jpg"
-    )
+    THUMB = config("THUMBNAIL", default="https://graph.org/file/ad1b25807b81cdf1dff65.jpg")
     FFMPEG = config("FFMPEG", default="ffmpeg")
     CRF = config("CRF", default="27")
     SEND_SCHEDULE = config("SEND_SCHEDULE", default=False, cast=bool)

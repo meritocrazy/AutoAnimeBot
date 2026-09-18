@@ -46,17 +46,13 @@ class RawAnimeInfo:
             return data
         data = {}
         data["anime_id"] = raw_data.get("id")
-        data["english_title"] = raw_data.get("attributes", {}).get("titles", {}).get(
-            "en"
-        ) or raw_data.get("attributes", {}).get("titles", {}).get("en_jp")
-        data["japanese_title"] = (
-            raw_data.get("attributes", {}).get("titles", {}).get("ja_jp")
-        )
+        data["english_title"] = raw_data.get("attributes", {}).get("titles", {}).get("en") or raw_data.get(
+            "attributes", {}
+        ).get("titles", {}).get("en_jp")
+        data["japanese_title"] = raw_data.get("attributes", {}).get("titles", {}).get("ja_jp")
         data["description"] = raw_data.get("attributes", {}).get("description")
         data["total_eps"] = raw_data.get("attributes", {}).get("episodeCount") or "N/A"
-        data["poster_img"] = (
-            raw_data.get("attributes", {}).get("posterImage", {}).get("original")
-        )
+        data["poster_img"] = raw_data.get("attributes", {}).get("posterImage", {}).get("original")
         # anilist score will be better i guess
         # data["score"] = raw_data.get("attributes", {}).get("averageRating") or "N/A"
         data["type"] = raw_data.get("attributes", {}).get("showType") or "TV"
@@ -66,27 +62,17 @@ class RawAnimeInfo:
     async def searcher(self, query: str):
         session = await self._get_session()
         try:
-            data = await session.get(
-                f"https://kitsu.io/api/edge/anime?filter%5Btext%5D={query.replace(' ', '%20')}"
-            )
+            data = await session.get(f"https://kitsu.io/api/edge/anime?filter%5Btext%5D={query.replace(' ', '%20')}")
             links = (await data.json())["data"]
             for index in range(len(links)):
                 res_data = await self.re_searcher(links[index]["links"]["self"])
                 if res_data["data"]["attributes"]["status"] == "tba":
                     continue
                 if "current" != res_data["data"]["attributes"]["status"]:
-                    if (
-                        res_data["data"]["attributes"]["endDate"]
-                        or res_data["data"]["attributes"]["startDate"]
-                    ):
-                        if "2026" not in (
-                            res_data["data"]["attributes"]["endDate"] or ""
-                        ):
+                    if res_data["data"]["attributes"]["endDate"] or res_data["data"]["attributes"]["startDate"]:
+                        if "2026" not in (res_data["data"]["attributes"]["endDate"] or ""):
                             if all(
-                                year
-                                not in (
-                                    res_data["data"]["attributes"]["startDate"] or ""
-                                )
+                                year not in (res_data["data"]["attributes"]["startDate"] or "")
                                 for year in ["2024", "2025", "2026"]
                             ):
                                 continue
@@ -110,21 +96,12 @@ class RawAnimeInfo:
         session = await self._get_session()
         try:
             _data = {}
-            res = await session.get(
-                f"https://kitsu.io/api/edge/anime/{kitsu_id}/mappings"
-            )
+            res = await session.get(f"https://kitsu.io/api/edge/anime/{kitsu_id}/mappings")
             data = (await res.json())["data"]
             for maps in data:
-                if (
-                    maps.get("attributes", {}).get("externalSite")
-                    == "anilist/anime"
-                ):
-                    _data["anilist_id"] = maps.get("attributes", {}).get(
-                        "externalId"
-                    )
-                    _data["anilist_poster"] = (
-                        f"https://img.anili.st/media/{_data['anilist_id']}"
-                    )
+                if maps.get("attributes", {}).get("externalSite") == "anilist/anime":
+                    _data["anilist_id"] = maps.get("attributes", {}).get("externalId")
+                    _data["anilist_poster"] = f"https://img.anili.st/media/{_data['anilist_id']}"
                     __data = self.anilist_result(_data["anilist_id"])
                     return {**_data, **__data}
         except Exception:

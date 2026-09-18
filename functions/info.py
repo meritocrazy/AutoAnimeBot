@@ -74,11 +74,7 @@ class AnimeInfo:
                 return self.CAPTION.format(
                     (await self.get_english()),
                     str(self.data.get("anime_season") or 1).zfill(2),
-                    (
-                        str(self.data.get("episode_number")).zfill(2)
-                        if self.data.get("episode_number")
-                        else "N/A"
-                    ),
+                    (str(self.data.get("episode_number")).zfill(2) if self.data.get("episode_number") else "N/A"),
                 )
         except Exception:
             LOGS.error(str(format_exc()))
@@ -103,9 +99,7 @@ class AnimeInfo:
                 return self._sanitize_filename(name)
             if anime_name:
                 name = (
-                    f"{(await self.get_english())} [{self.data.get('video_resolution')}].mkv".replace(
-                        "‘", ""
-                    )
+                    f"{(await self.get_english())} [{self.data.get('video_resolution')}].mkv".replace("‘", "")
                     .replace("’", "")
                     .strip()
                 )
@@ -124,11 +118,7 @@ class AnimeInfo:
                 return (
                     f"{anime_name} S{data.get('anime_season')} {data.get('episode_title')}"
                     if data.get("anime_season") and data.get("episode_title")
-                    else (
-                        f"{anime_name} S{data.get('anime_season')}"
-                        if data.get("anime_season")
-                        else anime_name
-                    )
+                    else (f"{anime_name} S{data.get('anime_season')}" if data.get("anime_season") else anime_name)
                 )
             return anime_name
         except Exception as error:

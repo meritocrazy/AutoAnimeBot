@@ -16,6 +16,8 @@
 # if you are using this following code then don't forgot to give proper
 # credit to t.me/kAiF_00z (github.com/kaif-00z)
 
+"""Utility functions for file operations, encoding, and media processing."""
+
 import asyncio
 import hashlib
 import json
@@ -23,8 +25,8 @@ import math
 import os
 import re
 import shutil
-import subprocess
 import time
+from contextlib import suppress
 from traceback import format_exc
 
 import aiofiles
@@ -35,15 +37,19 @@ from telethon.errors.rpcerrorlist import MessageNotModifiedError
 
 from functions.config import Var
 from libs.logger import LOGS
+from libs.subprocess_utils import run_subprocess, run_subprocess_stream
 
 
 class Tools:
+    """Utility class for various media processing tasks."""
+
     def __init__(self):
         if Var.DEV_MODE:
             self.ffmpeg_threads = int(os.cpu_count() or 0) + 2
         else:
             self.ffmpeg_threads = 2
         self._http_session: aiohttp.ClientSession | None = None
+        self._temp_dirs = ["encode", "thumbs", "downloads"]
 
     async def _get_session(self) -> aiohttp.ClientSession:
         if self._http_session is None or self._http_session.closed:
@@ -72,9 +78,7 @@ class Tools:
     ):
         session = await self._get_session()
         if post:
-            data = await session.post(
-                url, json=json, data=data, ssl=ssl, *args, **kwargs
-            )
+            data = await session.post(url, json=json, data=data, ssl=ssl, *args, **kwargs)
         else:
             data = await session.get(url, params=params, ssl=ssl, *args, **kwargs)
         if re_json:
@@ -86,15 +90,14 @@ class Tools:
         return await data.text()
 
     async def cover_dl(self, link):
+        """Download cover image from URL."""
         try:
             if not link:
                 return None
             image = await self.async_searcher(link, re_content=True)
             clean_link = link.split("?")[0]
             filename = clean_link.split("/")[-1]
-            if len(filename) > 30 or not filename.lower().endswith(
-                (".jpg", ".png", ".jpeg")
-            ):
+            if len(filename) > 30 or not filename.lower().endswith((".jpg", ".png", ".jpeg")):
                 filename = hashlib.md5(link.encode()).hexdigest() + ".jpg"
             fn = f"thumbs/{filename}"
             async with aiofiles.open(fn, "wb") as file:
@@ -105,6 +108,7 @@ class Tools:
             LOGS.error(str(error))
 
     async def mediainfo(self, file, bot):
+        """Generate mediainfo HTML and post to Telegraph."""
         try:
             process = await asyncio.create_subprocess_exec(
                 "mediainfo",
@@ -153,18 +157,29 @@ class Tools:
             LOGS.error(str(format_exc()))
 
     def init_dir(self):
-        if not os.path.exists("thumb.jpg"):
-            content = requests.get(Var.THUMB).content
-            with open("thumb.jpg", "wb") as f:
-                f.write(content)
-        if not os.path.isdir("encode/"):
-            os.mkdir("encode/")
-        if not os.path.isdir("thumbs/"):
-            os.mkdir("thumbs/")
-        if not os.path.isdir("downloads/"):
-            os.mkdir("downloads/")
+        """Initialize required directories and default thumbnail."""
+        try:
+            if not os.path.exists("thumb.jpg"):
+                content = requests.get(Var.THUMB, timeout=10).content
+                with open("thumb.jpg", "wb") as f:
+                    f.write(content)
+            for dir_name in self._temp_dirs:
+                if not os.path.isdir(dir_name):
+                    os.mkdir(dir_name)
+        except Exception as error:
+            LOGS.exception(format_exc())
+            LOGS.error(str(error))
+
+    def cleanup_dirs(self):
+        """Clean up temporary directories."""
+        for dir_name in self._temp_dirs:
+            with suppress(Exception):
+                shutil.rmtree(dir_name)
+        with suppress(Exception):
+            os.remove("thumb.jpg")
 
     def hbs(self, size):
+        """Convert bytes to human readable string."""
         if not size:
             return ""
         power = 2**10
@@ -176,6 +191,7 @@ class Tools:
         return str(round(size, 2)) + " " + dict_power_n[raised_to_pow] + "B"
 
     def ts(self, milliseconds: int) -> str:
+        """Convert milliseconds to human readable time string."""
         seconds, milliseconds = divmod(int(milliseconds), 1000)
         minutes, seconds = divmod(seconds, 60)
         hours, minutes = divmod(minutes, 60)
@@ -190,6 +206,7 @@ class Tools:
         return tmp[:-1]
 
     async def rename_file(self, dl, out):
+        """Rename/move a file."""
         try:
             os.rename(dl, out)
         except Exception:
@@ -197,28 +214,23 @@ class Tools:
         return True, out
 
     async def bash_(self, cmd, run_code=0):
-        # Use create_subprocess_exec with explicit args to avoid shell injection
-        if isinstance(cmd, str):
-            # Split shell command into args (basic splitting, not full shell parsing)
-            import shlex
-            args = shlex.split(cmd)
-        else:
-            args = cmd
-        process = await asyncio.create_subprocess_exec(
-            *args,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        stdout, stderr = await process.communicate()
-        err = stderr.decode().strip() or None
-        out = stdout.decode().strip()
+        """Run a command and capture output.
+
+        Args:
+            cmd: Command as list or string.
+            run_code: If 0, treat non-empty stderr as error.
+
+        Returns:
+            Tuple of (stdout, stderr or error_code).
+        """
+        out, err = await run_subprocess(cmd)
         if not run_code and err:
             if match := re.match(r"\/bin\/sh: (.*): ?(\w+): not found", err):
                 return out, f"{match.group(2).upper()}_NOT_FOUND"
         return out, err
 
     async def frame_counts(self, dl):
-        # Use mediainfo directly without shell pipe
+        """Get frame count from video file using mediainfo."""
         _x, _y = await self.bash_(["mediainfo", "--fullscan", dl])
         if _y and _y.endswith("NOT_FOUND"):
             LOGS.error(f"ERROR: `{_y}`")
@@ -230,6 +242,7 @@ class Tools:
         return False
 
     async def compress(self, dl, out, log_msg):
+        """Compress video using ffmpeg with progress tracking."""
         total_frames = await self.frame_counts(dl)
         if not total_frames:
             return False, "Unable to Count The Frames!"
@@ -289,9 +302,12 @@ class Tools:
                         speed = round(elapse / time_diff, 2)
                     if int(speed) != 0:
                         some_eta = ((int(total_frames) - elapse) / speed) * 1000
-                        text = f"**Successfully Downloaded The Anime**\n\n **File Name:** ```{dl.split('/')[-1]}```\n\n**STATUS:** \n"
+                        text = (
+                            f"**Successfully Downloaded The Anime**\n\n "
+                            f"**File Name:** ```{dl.split('/')[-1]}```\n\n**STATUS:** \n"
+                        )
                         progress_str = "`[{0}{1}] {2}%\n\n`".format(
-                            "".join("●" for _ in range(math.floor(per / 5))),
+                            "".join("\u25cf" for _ in range(math.floor(per / 5))),
                             "".join("" for _ in range(20 - math.floor(per / 5))),
                             round(per, 2),
                         )
@@ -312,6 +328,7 @@ class Tools:
         return True, _new_log_msg
 
     async def genss(self, file):
+        """Get video duration in seconds using mediainfo."""
         process = await asyncio.create_subprocess_exec(
             shutil.which("mediainfo"),
             file,
@@ -326,6 +343,7 @@ class Tools:
         return int(p.split(".")[-2])
 
     def stdr(self, seconds: int) -> str:
+        """Format seconds as HH:MM:SS."""
         minutes, seconds = divmod(seconds, 60)
         hours, minutes = divmod(minutes, 60)
         if len(str(minutes)) == 1:
@@ -342,6 +360,7 @@ class Tools:
         return dur
 
     async def duration_s(self, file):
+        """Get two timestamps for sample video generation."""
         tsec = await self.genss(file)
         x = round(tsec / 5)
         y = round(tsec / 5 + 30)
@@ -353,6 +372,7 @@ class Tools:
         return pin, pon
 
     async def gen_ss_sam(self, _hash, filename):
+        """Generate screenshots and sample video."""
         try:
             ss_path, sp_path = None, None
             os.mkdir(_hash)

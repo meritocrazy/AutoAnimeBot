@@ -60,25 +60,19 @@ class Executors:
 
             if self.is_original:
                 await self.reporter.started_renaming()
-                succ, out = await self.tools.rename_file(
-                    self.input_file, self.output_file
-                )
+                succ, out = await self.tools.rename_file(self.input_file, self.output_file)
                 if not succ:
                     return False, out
             else:
                 _log_msg = await self.reporter.started_compressing()
-                succ, _new_msg = await self.tools.compress(
-                    self.input_file, self.output_file, _log_msg
-                )
+                succ, _new_msg = await self.tools.compress(self.input_file, self.output_file, _log_msg)
                 if not succ:
                     return False, _new_msg
                 self.reporter.msg = _new_msg
 
             await self.reporter.started_uploading()
             if self.is_button:
-                msg = await self.bot.upload_anime(
-                    self.output_file, rename, thumb or "thumb.jpg", is_button=True
-                )
+                msg = await self.bot.upload_anime(self.output_file, rename, thumb or "thumb.jpg", is_button=True)
                 btn = Button.url(
                     f"{self.anime_info.data.get('video_resolution')}",
                     url=f"https://t.me/{((await self.bot.get_me()).username)}?start={msg.id}",
@@ -86,9 +80,7 @@ class Executors:
                 self.msg_id = msg.id
                 return True, btn
 
-            msg = await self.bot.upload_anime(
-                self.output_file, rename, thumb or "thumb.jpg"
-            )
+            msg = await self.bot.upload_anime(self.output_file, rename, thumb or "thumb.jpg")
             self.msg_id = msg.id
             return True, []
 

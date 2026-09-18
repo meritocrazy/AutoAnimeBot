@@ -79,9 +79,7 @@ class Bot(TelegramClient):
         )
         self.user_client = None
         if Var.SESSION:
-            self.user_client = TelegramClient(
-                StringSession(Var.SESSION), kwargs["api_id"], kwargs["api_hash"]
-            )
+            self.user_client = TelegramClient(StringSession(Var.SESSION), kwargs["api_id"], kwargs["api_hash"])
         self.run_in_loop(self.start_client(bot_token=bot_token or Var.BOT_TOKEN))
 
     def __repr__(self):
@@ -177,11 +175,7 @@ class Bot(TelegramClient):
             )
             if logo:
                 try:
-                    await self.user_client(
-                        EditPhotoRequest(
-                            chat_id, (await self.user_client.upload_file(logo))
-                        )
-                    )
+                    await self.user_client(EditPhotoRequest(chat_id, (await self.user_client.upload_file(logo))))
                 except Exception:
                     pass
             return chat_id
