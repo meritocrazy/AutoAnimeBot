@@ -40,11 +40,23 @@ class AnimeInfo:
         self.proper_name = self.get_proper_name_for_func(name)
         self.name = name
         self.data = anitopy.parse(name)
+        self._kitsu_cache = None
+
+    async def _get_kitsu_data(self):
+        """Fetch and cache Kitsu search result for this anime."""
+        if self._kitsu_cache is not None:
+            return self._kitsu_cache
+        try:
+            self._kitsu_cache = await self.kitsu.search(self.proper_name) or {}
+        except Exception:
+            LOGS.error(str(format_exc()))
+            self._kitsu_cache = {}
+        return self._kitsu_cache
 
     async def get_english(self):
         anime_name = self.data.get("anime_title")
         try:
-            anime = (await self.kitsu.search(self.proper_name)) or {}
+            anime = await self._get_kitsu_data()
             return anime.get("english_title") or anime_name
         except Exception:
             LOGS.error(str(format_exc()))
@@ -53,7 +65,7 @@ class AnimeInfo:
     async def get_poster(self):
         try:
             if self.proper_name:
-                anime_poster = await self.kitsu.search(self.proper_name)
+                anime_poster = await self._get_kitsu_data()
                 return anime_poster.get("poster_img") or None
         except Exception:
             LOGS.error(str(format_exc()))
@@ -61,7 +73,7 @@ class AnimeInfo:
     async def get_cover(self):
         try:
             if self.proper_name:
-                anime_poster = await self.kitsu.search(self.proper_name)
+                anime_poster = await self._get_kitsu_data()
                 if anime_poster.get("anilist_id"):
                     return anime_poster.get("anilist_poster")
                 return None

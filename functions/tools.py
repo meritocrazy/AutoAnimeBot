@@ -39,6 +39,9 @@ from functions.config import Var
 from libs.logger import LOGS
 from libs.subprocess_utils import run_subprocess, run_subprocess_stream
 
+_telegraph_client: TelegraphPoster | None = None
+_telegraph_token: str | None = None
+
 
 class Tools:
     """Utility class for various media processing tasks."""
@@ -119,9 +122,11 @@ class Tools:
             )
             stdout, stderr = await process.communicate()
             out = stdout.decode()
-            client = TelegraphPoster(use_api=True)
-            client.create_api_token("Mediainfo")
-            page = client.post(
+            global _telegraph_client, _telegraph_token
+            if _telegraph_client is None:
+                _telegraph_client = TelegraphPoster(use_api=True)
+                _telegraph_token = await _telegraph_client.create_api_token("AutoAnimeBot")
+            page = _telegraph_client.post(
                 title="Mediainfo",
                 author=((await bot.get_me()).first_name),
                 author_url=f"https://t.me/{((await bot.get_me()).username)}",

@@ -189,7 +189,7 @@ class AdminUtils:
         total_docs = await self.db.file_store_db.count_documents({})
         total_users = await self.db.broadcast_db.count_documents({})
         text = ABOUT.format(
-            self.tools.ts(int((dt.now() - self.started_at).seconds) * 1000),
+            self.tools.ts(int((dt.now() - self.started_at).total_seconds()) * 1000),
             Var.__version__,
             total_users,
             total_docs,
