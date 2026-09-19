@@ -31,3 +31,24 @@
 
     
 09/18/2026, 15:14:14 || pyrogram.crypto.aes [INFO] : Using TgCrypto
+09/19/2026, 00:33:40 || AutoAnimeBot [INFO] : 
+                            Auto Anime Bot
+                ©️ t.me/kAiF_00z (github.com/kaif-00z)
+                        v0.2 (original)
+                             (2023-26)
+                        [All Rigths Reserved]
+
+    
+09/19/2026, 00:33:46 || asyncio [ERROR] : Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x00000275E8C0D410>
+09/19/2026, 00:33:46 || asyncio [ERROR] : Unclosed connector
+connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x00000275E8E36DD0>, 8807.156)])']
+connector: <aiohttp.connector.TCPConnector object at 0x00000275E8C36450>
+09/19/2026, 15:21:30 || AutoAnimeBot [INFO] : 
+                            Auto Anime Bot
+                ©️ t.me/kAiF_00z (github.com/kaif-00z)
+                        v0.2 (original)
+                             (2023-26)
+                        [All Rigths Reserved]
+
+    

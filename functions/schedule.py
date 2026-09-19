@@ -12,14 +12,15 @@
 #
 # License can be found in <
 # https://github.com/kaif-00z/AutoAnimeBot/blob/main/LICENSE > .
-
+#
 # if you are using this following code then don't forgot to give proper
 # credit to t.me/kAiF_00z (github.com/kaif-00z)
 
 
+"""Scheduler tasks for AutoAnimeBot (anime schedule, daily restart)."""
+
+import asyncio
 import json
-import os
-import sys
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from telethon import TelegramClient
@@ -27,6 +28,7 @@ from telethon import TelegramClient
 from functions.config import Var
 from functions.info import AnimeInfo
 from functions.tools import Tools
+from libs.logger import LOGS
 
 
 class ScheduleTasks:

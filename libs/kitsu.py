@@ -16,11 +16,18 @@
 # if you are using this following code then don't forgot to give proper
 # credit to t.me/kAiF_00z (github.com/kaif-00z)
 
+"""Kitsu and AniList API client for anime metadata."""
+
+import asyncio
 import aiohttp
 from AnilistPython import Anilist
 
+from libs.logger import LOGS
+
 
 class RawAnimeInfo:
+    """Raw anime information fetcher from Kitsu and AniList APIs."""
+
     def __init__(self):
         self.anilist = Anilist()
         self._session: aiohttp.ClientSession | None = None
@@ -36,11 +43,20 @@ class RawAnimeInfo:
             await self._session.close()
 
     async def search(self, query: str):
+        """Search for anime by query string.
+
+        Args:
+            query: Anime title to search for.
+
+        Returns:
+            Dictionary with anime metadata.
+        """
         raw_data = ((await self.searcher(query)) or {}).get("data") or {}
         try:
             _raw_data = await self.search_anilist(raw_data.get("id"))
-        except Exception:
+        except Exception as exc:  # pylint: disable=broad-except
             _raw_data = {}
+            LOGS.error("Search anilist failed: %s", exc)
         if not raw_data:
             data = {}  # self.alt_anilist(query)
             return data
@@ -60,12 +76,20 @@ class RawAnimeInfo:
         return {**(data if data else {}), **(_raw_data if _raw_data else {})}
 
     async def searcher(self, query: str):
+        """Search Kitsu API for anime.
+
+        Args:
+            query: Search query string.
+
+        Returns:
+            Raw Kitsu API response.
+        """
         session = await self._get_session()
         try:
             data = await session.get(f"https://kitsu.io/api/edge/anime?filter%5Btext%5D={query.replace(' ', '%20')}")
             links = (await data.json())["data"]
-            for index in range(len(links)):
-                res_data = await self.re_searcher(links[index]["links"]["self"])
+            for index, link in enumerate(links):
+                res_data = await self.re_searcher(link["links"]["self"])
                 if res_data["data"]["attributes"]["status"] == "tba":
                     continue
                 if "current" != res_data["data"]["attributes"]["status"]:
@@ -77,20 +101,36 @@ class RawAnimeInfo:
                             ):
                                 continue
                     return res_data
-        except Exception:
-            raise ValueError("Kitsu: Search Link Not Found")
+        except Exception as exc:
+            raise ValueError("Kitsu: Search Link Not Found") from exc
 
     async def re_searcher(self, link: str):
+        """Get detailed anime info from Kitsu API.
+
+        Args:
+            link: API endpoint link.
+
+        Returns:
+            Detailed anime data.
+        """
         if not link:
             raise ValueError("Kitsu: Link Not Found")
         session = await self._get_session()
         try:
             data = await session.get(link)
             return await data.json()
-        except Exception:
-            raise ValueError("Kitsu: Link Not Found")
+        except Exception as exc:
+            raise ValueError("Kitsu: Link Not Found") from exc
 
     async def search_anilist(self, kitsu_id):
+        """Search AniList for additional metadata.
+
+        Args:
+            kitsu_id: Kitsu anime ID.
+
+        Returns:
+            AniList metadata.
+        """
         if not kitsu_id:
             raise ValueError("Kitsu: ID Not Found")
         session = await self._get_session()
@@ -104,10 +144,18 @@ class RawAnimeInfo:
                     _data["anilist_poster"] = f"https://img.anili.st/media/{_data['anilist_id']}"
                     __data = await asyncio.to_thread(self.anilist_result, _data["anilist_id"])
                     return {**_data, **__data}
-        except Exception:
-            raise ValueError("Kitsu: Mapping Failed")
+        except Exception as exc:
+            raise ValueError("Kitsu: Mapping Failed") from exc
 
     def anilist_result(self, anilist_id):
+        """Get anime details from AniList.
+
+        Args:
+            anilist_id: AniList anime ID.
+
+        Returns:
+            Dictionary with genres, schedule, score, etc.
+        """
         try:
             data = self.anilist.get_anime_with_id(anilist_id)
             return {
@@ -118,10 +166,19 @@ class RawAnimeInfo:
                 "ending_time": data.get("ending_time"),
                 "score": data.get("average_score") or "N/A",
             }
-        except Exception:
+        except Exception as exc:  # pylint: disable=broad-except
+            LOGS.error("AniList result failed: %s", exc)
             return {}
 
     def alt_anilist(self, anime_name):
+        """Alternative AniList search by name.
+
+        Args:
+            anime_name: Anime title to search.
+
+        Returns:
+            Dictionary with anime metadata from AniList.
+        """
         data = self.anilist.get_anime(anime_name)
         _id = self.anilist.get_anime_id(anime_name)
         return {

@@ -47,8 +47,8 @@ class SubsPlease:
         LOGS.info("Stopping The Bot...")
         try:
             [shutil.rmtree(fold) for fold in ["downloads", "thumbs", "encode"]]
-        except Exception:
-            LOGS.error(format_exc())
+        except Exception as exc:  # pylint: disable=broad-except
+            LOGS.error(str(exc))
         sys.exit(0)
 
     async def rss_feed_data(self):
@@ -67,8 +67,8 @@ class SubsPlease:
             return d1080, d720, d480
         except KeyboardInterrupt:
             self.exit()
-        except Exception:
-            LOGS.error(format_exc())
+        except Exception as exc:  # pylint: disable=broad-except
+            LOGS.error(str(exc))
             return None, None, None
 
     async def feed_optimizer(self):
@@ -103,8 +103,8 @@ class SubsPlease:
                             "720p": f720,
                             "480p": f480,
                         }
-            except Exception:
-                LOGS.error(format_exc())
+            except Exception as exc:  # pylint: disable=broad-except
+                LOGS.error(str(exc))
                 return None
 
     async def on_new_anime(self, function):
@@ -121,6 +121,6 @@ class SubsPlease:
                     await self.db.add_anime(data.get("uid"))
             except KeyboardInterrupt:
                 self.exit()
-            except Exception:
-                LOGS.error("[RSS Loop] Error in cycle %s: %s", i, format_exc())
+            except Exception as exc:  # pylint: disable=broad-except
+                LOGS.error("[RSS Loop] Error in cycle %s: %s", i, exc)
             await asyncio.sleep(5)

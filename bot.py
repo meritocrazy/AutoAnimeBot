@@ -219,11 +219,11 @@ async def anime(data):
                     continue
                 await reporter.report_error(_btn, log=True)
                 await reporter.msg.delete()
-            except Exception:
-                await reporter.report_error(str(format_exc()), log=True)
+            except Exception as exc:  # pylint: disable=broad-except
+                await reporter.report_error(str(exc), log=True)
                 await reporter.msg.delete()
-    except Exception:
-        LOGS.error("Error in anime handler: %s", format_exc())
+    except Exception as exc:  # pylint: disable=broad-except
+        LOGS.error("Error in anime handler: %s", exc)
 
 
 try:

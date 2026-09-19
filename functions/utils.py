@@ -50,8 +50,8 @@ ABOUT = """
 class AdminUtils:
     """Admin utilities for bot management."""
 
-    def __init__(self, dB: DataBase, bot: Bot):
-        self.db = dB
+    def __init__(self, database: DataBase, bot: Bot):
+        self.db = database
         self.bot = bot
         self.tools = Tools()
         self.python_version = platform.python_version()
@@ -129,29 +129,27 @@ class AdminUtils:
 
     async def sep_c_t(self, e):
         """Toggle separate channel upload."""
-        if Var.SESSION:
-            if await self.db.is_button_upload():
-                if await self.db.is_separate_channel_upload():
-                    await self.db.toggle_separate_channel_upload()
-                    return await e.edit(
-                        "`Successfully Off The Separate Channel Upload`",
-                        buttons=self.back_btn(),
-                    )
-                await self.db.toggle_separate_channel_upload()
-                return await e.edit(
-                    "`Successfully On The Separate Channel Upload`",
-                    buttons=self.back_btn(),
-                )
-            else:
-                return await e.edit(
-                    "`To Use The Separate Channel Upload First You Have To Enable Button Upload`",
-                    buttons=self.back_btn(),
-                )
-        else:
+        if not Var.SESSION:
             return await e.edit(
                 "`To Use The Separate Channel Upload First You Have To Add SESSION Variable in The Bot`",
                 buttons=self.back_btn(),
             )
+        if await self.db.is_button_upload():
+            if await self.db.is_separate_channel_upload():
+                await self.db.toggle_separate_channel_upload()
+                return await e.edit(
+                    "`Successfully Off The Separate Channel Upload`",
+                    buttons=self.back_btn(),
+                )
+            await self.db.toggle_separate_channel_upload()
+            return await e.edit(
+                "`Successfully On The Separate Channel Upload`",
+                buttons=self.back_btn(),
+            )
+        return await e.edit(
+            "`To Use The Separate Channel Upload First You Have To Enable Button Upload`",
+            buttons=self.back_btn(),
+        )
 
     async def broadcast_bt(self, e):
         """Broadcast message to all users."""
@@ -179,9 +177,9 @@ class AdminUtils:
                     await e.client.send_message(int(user), repl.message)
                 await asyncio.sleep(0.2)
                 done += 1
-            except Exception as ex:
+            except Exception as exc:  # pylint: disable=broad-except
                 er += 1
-                LOGS.error("Broadcast error for user %s: %s", user, ex)
+                LOGS.error("Broadcast error for user %s: %s", user, exc)
         await sent.edit(f"**Broadcast Completed To** `{done}` **Users.**\n**Error in** `{er}` **Users.**")
 
     async def about(self, e):
