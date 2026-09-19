@@ -51,7 +51,6 @@ disable=
     undefined-variable,
     unsubscriptable-object,
     unsupported-membership-test,
-    unsubscriptable-object,
     no-member,
     not-an-iterable,
     not-callable,
@@ -60,7 +59,6 @@ disable=
     unexpected-keyword-arg,
     no-value-for-parameter,
     too-many-keyword-args,
-    unexpected-keyword-arg,
     redundant-keyword-arg,
     missing-kwoa,
     arguments-differ,
@@ -81,80 +79,12 @@ disable=
     bad-staticmethod-argument,
     bad-mcs-classmethod-argument,
     bad-mcs-method-argument,
-    bad-classmethod-argument,
     no-init,
     super-init-not-called,
     super-without-brackets,
-    bad-super-call,
-    redefined-builtin,
-    redefined-outer-name,
     redefined-variable-type,
     redefined-argument-from-local,
-    redefined-loop-name,
-    redefined-loop-name,
-    redefined-name,
-    redefined-argument,
-    redefined-argument-from-local,
-    redefined-builtin,
-    redefined-outer-name,
-    redefined-variable-type,
-    redefined-loop-name,
-    redefined-argument,
-    redefined-argument-from-local,
-    redefined-builtin,
-    redefined-outer-name,
-    redefined-variable-type,
-    redefined-loop-name,
-    redefined-argument,
-    redefined-argument-from-local,
-    redefined-builtin,
-    redefined-outer-name,
-    redefined-variable-type,
-    redefined-loop-name,
-    redefined-argument,
-    redefined-argument-from-local,
-    redefined-builtin,
-    redefined-outer-name,
-    redefined-variable-type,
-    redefined-loop-name,
-    redefined-argument,
-    redefined-argument-from-local,
-    redefined-builtin,
-    redefined-outer-name,
-    redefined-variable-type,
-    redefined-loop-name,
-    redefined-argument,
-    redefined-argument-from-local,
-    redefined-builtin,
-    redefined-outer-name,
-    redefined-variable-type,
-    redefined-loop-name,
-    redefined-argument,
-    redefined-argument-from-local,
-    redefined-builtin,
-    redefined-outer-name,
-    redefined-variable-type,
-    redefined-loop-name,
-    redefined-argument,
-    redefined-argument-from-local,
-    redefined-builtin,
-    redefined-outer-name,
-    redefined-variable-type,
-    redefined-loop-name,
-    redefined-argument,
-    redefined-argument-from-local,
-    redefined-builtin,
-    redefined-outer-name,
-    redefined-variable-type,
-    redefined-loop-name,
-    redefined-argument,
-    redefined-argument-from-local,
-    redefined-builtin,
-    redefined-outer-name,
-    redefined-variable-type,
-    redefined-loop-name,
-    redefined-argument,
-    redefined-argument-from-local
+    redefined-loop-name
 
 enable=
     syntax-error,
@@ -210,7 +140,6 @@ enable=
     unexpected-keyword-arg,
     no-value-for-parameter,
     too-many-keyword-args,
-    unexpected-keyword-arg,
     redundant-keyword-arg,
     missing-kwoa,
     arguments-differ,
@@ -231,18 +160,10 @@ enable=
     bad-staticmethod-argument,
     bad-mcs-classmethod-argument,
     bad-mcs-method-argument,
-    bad-classmethod-argument,
     no-init,
     super-init-not-called,
     super-without-brackets,
     bad-super-call
-
-[FORMAT]
-max-line-length=120
-indent-string='    '
-indent-after-paren=4
-expected-line-ending-format=LF
-max-module-lines=1000
 
 [SIMILARITIES]
 min-similarity-lines=4
@@ -265,7 +186,7 @@ ignore-interface-methods=is_
 defining-attr-methods=__init__,__new__,setUp,tearDown
 
 [IMPORTS]
-deprecated-modules=regsub,TERMIOS,Bastion,rexec,sets,stringold,urllib,urlparse,htmllib,sgmllib,cgi,BaseHTTPServer,Cookie,cookielib,cgitb,UserDict,UserList,UserString,anydbm,dumbdbm,dbhash,whichdb,md5,sha,audiodev,linuxaudiodev,sunaudiodev,toaiff,imageop,rgbimg,colorsys,imghdr,sndhdr,aifc,sunau,wave,chunk,ossaudiodev,spwd,grp,nis,crypt,resource,termios,tty,pty,posix,fcntl,pwd,grp,crypt,termios,pty,fcntl,pwd,grp
+deprecated-modules=regsub,TERMIOS,Bastion,rexec,sets,stringold,urllib,urlparse,htmllib,sgmllib,cgi,BaseHTTPServer,Cookie,cookielib,cgitb,UserDict,UserList,UserString,anydbm,dumbdbm,dbhash,whichdb,md5,sha,audiodev,linuxaudiodev,sunaudiodev,toaiff,imageop,rgbimg,colorsys,imghdr,sndhdr,aifc,sunau,wave,chunk,ossaudiodev,spwd,grp,nis,crypt,resource,termios,tty,pty,posix,fcntl,pwd
 import-graph=
 ext-import-graph=
 int-import-graph=
@@ -275,7 +196,7 @@ known-first-party=
 
 [LOGGING]
 logging-modules=logging
-logging-format-style=%
+logging-format-style=old
 logging-levels=DEBUG,INFO,WARNING,ERROR,CRITICAL
 
 [TYPECHECK]
@@ -286,3 +207,7 @@ allow-unpacking-inference=yes
 
 [FORMAT]
 max-line-length=120
+indent-string='    '
+indent-after-paren=4
+expected-line-ending-format=LF
+max-module-lines=1000

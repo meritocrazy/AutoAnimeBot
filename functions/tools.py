@@ -106,9 +106,9 @@ class Tools:
             async with aiofiles.open(fn, "wb") as file:
                 await file.write(image)
             return fn
-        except Exception as error:
-            LOGS.exception(format_exc())
-            LOGS.error(str(error))
+        except Exception as exc:  # pylint: disable=broad-except
+            LOGS.exception(exc)
+            LOGS.error(str(exc))
 
     async def mediainfo(self, file, bot):
         """Generate mediainfo HTML and post to Telegraph."""
@@ -133,9 +133,9 @@ class Tools:
                 text=out,
             )
             return page.get("url")
-        except Exception as error:
-            LOGS.exception(format_exc())
-            LOGS.error(str(error))
+        except Exception as exc:  # pylint: disable=broad-except
+            LOGS.exception(exc)
+            LOGS.error(str(exc))
 
     async def _poster(self, bot, anime_info, channel_id=None):
         thumb = await self.cover_dl((await anime_info.get_cover()))
@@ -171,9 +171,9 @@ class Tools:
             for dir_name in self._temp_dirs:
                 if not os.path.isdir(dir_name):
                     os.mkdir(dir_name)
-        except Exception as error:
-            LOGS.exception(format_exc())
-            LOGS.error(str(error))
+        except Exception as exc:  # pylint: disable=broad-except
+            LOGS.exception(exc)
+            LOGS.error(str(exc))
 
     def cleanup_dirs(self):
         """Clean up temporary directories."""
@@ -214,8 +214,8 @@ class Tools:
         """Rename/move a file."""
         try:
             os.rename(dl, out)
-        except Exception:
-            return False, format_exc()
+        except Exception as exc:  # pylint: disable=broad-except
+            return False, str(exc)
         return True, out
 
     async def bash_(self, cmd, run_code=0):
@@ -247,90 +247,91 @@ class Tools:
         return False
 
     async def compress(self, dl, out, log_msg):
-        """Compress video using ffmpeg with progress tracking."""
-        total_frames = await self.frame_counts(dl)
-        if not total_frames:
-            return False, "Unable to Count The Frames!"
-        _progress = f"progress-{time.time()}.txt"
-        ffmpeg_cmd = [
-            Var.FFMPEG,
-            "-hide_banner",
-            "-loglevel",
-            "quiet",
-            "-progress",
-            _progress,
-            "-i",
-            dl,
-            "-metadata",
-            "Encoded By=https://github.com/kaif-00z/AutoAnimeBot/",
-            "-preset",
-            "ultrafast",
-            "-c:v",
-            "libx265",
-            "-crf",
-            str(int(Var.CRF)),
-            "-map",
-            "0:v",
-            "-c:a",
-            "aac",
-            "-map",
-            "0:a",
-            "-c:s",
-            "copy",
-            "-map",
-            "0:s?",
-            "-threads",
-            str(self.ffmpeg_threads),
-            out,
-            "-y",
-        ]
-        process = await asyncio.create_subprocess_exec(
-            *ffmpeg_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-        )
-        d_time = time.time()
-        while process.returncode is None:
-            await asyncio.sleep(5)
-            try:
-                with open(_progress, "r+") as fil:
-                    text = fil.read()
-                    frames = re.findall(r"frame=(\d+)", text)
-                    size = re.findall(r"total_size=(\d+)", text)
-                    speed = 0
-                    if not os.path.exists(out) or os.path.getsize(out) == 0:
-                        return False, "Unable To Encode This Video!"
-                    if len(frames):
-                        elapse = int(frames[-1])
-                    if len(size):
-                        size = int(size[-1])
-                        per = elapse * 100 / int(total_frames)
-                        time_diff = time.time() - d_time
-                        speed = round(elapse / time_diff, 2)
-                    if int(speed) != 0:
-                        some_eta = ((int(total_frames) - elapse) / speed) * 1000
-                        text = (
-                            f"**Successfully Downloaded The Anime**\n\n "
-                            f"**File Name:** ```{dl.split('/')[-1]}```\n\n**STATUS:** \n"
-                        )
-                        progress_str = "`[{0}{1}] {2}%\n\n`".format(
-                            "".join("\u25cf" for _ in range(math.floor(per / 5))),
-                            "".join("" for _ in range(20 - math.floor(per / 5))),
-                            round(per, 2),
-                        )
-                        e_size = f"{self.hbs(size)} of ~{self.hbs((size / per) * 100)}"
-                        eta = f"~{self.ts(some_eta)}"
-                        try:
-                            _new_log_msg = await log_msg.edit(
-                                text + progress_str + "`" + e_size + "`" + "\n\n`" + eta + "`"
+            """Compress video using ffmpeg with progress tracking."""
+            total_frames = await self.frame_counts(dl)
+            if not total_frames:
+                return False, "Unable to Count The Frames!"
+            _progress = f"progress-{time.time()}.txt"
+            ffmpeg_cmd = [
+                Var.FFMPEG,
+                "-hide_banner",
+                "-loglevel",
+                "quiet",
+                "-progress",
+                _progress,
+                "-i",
+                dl,
+                "-metadata",
+                "Encoded By=https://github.com/kaif-00z/AutoAnimeBot/",
+                "-preset",
+                "ultrafast",
+                "-c:v",
+                "libx265",
+                "-crf",
+                str(int(Var.CRF)),
+                "-map",
+                "0:v",
+                "-c:a",
+                "aac",
+                "-map",
+                "0:a",
+                "-c:s",
+                "copy",
+                "-map",
+                "0:s?",
+                "-threads",
+                str(self.ffmpeg_threads),
+                out,
+                "-y",
+            ]
+            process = await asyncio.create_subprocess_exec(
+                *ffmpeg_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            )
+            d_time = time.time()
+            _new_log_msg = log_msg
+            while process.returncode is None:
+                await asyncio.sleep(5)
+                try:
+                    with open(_progress, "r+", encoding="utf-8") as fil:
+                        text = fil.read()
+                        frames = re.findall(r"frame=(\d+)", text)
+                        size = re.findall(r"total_size=(\d+)", text)
+                        speed = 0
+                        if not os.path.exists(out) or os.path.getsize(out) == 0:
+                            return False, "Unable To Encode This Video!"
+                        if len(frames):
+                            elapse = int(frames[-1])
+                        if len(size):
+                            size = int(size[-1])
+                            per = elapse * 100 / int(total_frames)
+                            time_diff = time.time() - d_time
+                            speed = round(elapse / time_diff, 2)
+                        if int(speed) != 0:
+                            some_eta = ((int(total_frames) - elapse) / speed) * 1000
+                            text = (
+                                f"**Successfully Downloaded The Anime**\n\n "
+                                f"**File Name:** ```{dl.split('/')[-1]}```\n\n**STATUS:** \n"
                             )
-                        except MessageNotModifiedError:
-                            pass
+                            progress_str = "`[{0}{1}] {2}%\n\n`".format(
+                                "".join("\u25cf" for _ in range(math.floor(per / 5))),
+                                "".join("" for _ in range(20 - math.floor(per / 5))),
+                                round(per, 2),
+                            )
+                            e_size = f"{self.hbs(size)} of ~{self.hbs((size / per) * 100)}"
+                            eta = f"~{self.ts(some_eta)}"
+                            try:
+                                _new_log_msg = await log_msg.edit(
+                                    text + progress_str + "`" + e_size + "`" + "\n\n`" + eta + "`"
+                                )
+                            except MessageNotModifiedError:
+                                pass
+                except Exception:
+                    pass
+            try:
+                os.remove(_progress)
             except Exception:
                 pass
-        try:
-            os.remove(_progress)
-        except Exception:
-            pass
-        return True, _new_log_msg
+            return True, _new_log_msg
 
     async def genss(self, file):
         """Get video duration in seconds using mediainfo."""
@@ -441,6 +442,6 @@ class Tools:
             except Exception:
                 pass
             return _hash, out
-        except Exception as error:
-            LOGS.error(str(error))
-            LOGS.exception(format_exc())
+        except Exception as exc:  # pylint: disable=broad-except
+            LOGS.error(str(exc))
+            LOGS.exception(exc)

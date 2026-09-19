@@ -50,9 +50,9 @@ class DataBase:
             LOGS.info("Successfully Connected With MongoDB")
             # Create indexes in background
             self._create_indexes()
-        except Exception:
-            LOGS.exception(format_exc())
-            LOGS.critical(str(format_exc()))
+        except Exception as exc:  # pylint: disable=broad-except
+            LOGS.exception(exc)
+            LOGS.critical(str(exc))
             sys.exit(1)
 
     def _create_indexes(self):
@@ -64,8 +64,8 @@ class DataBase:
             self.broadcast_db.create_index("_id", unique=True)
             self.channel_info_db.create_index("_id", unique=True)
             self.file_info_db.create_index("_id", unique=True)
-        except Exception:
-            LOGS.error(format_exc())
+        except Exception as exc:  # pylint: disable=broad-except
+            LOGS.error(exc)
 
     async def add_anime(self, uid):
         """Add anime to the uploaded list if not already present.
