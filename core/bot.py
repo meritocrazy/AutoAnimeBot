@@ -28,6 +28,7 @@ if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 from pyrogram import Client, utils
+from pyrogram.errors import FloodWait
 from telethon import TelegramClient
 from telethon.errors import (
     AccessTokenExpiredError,
@@ -98,7 +99,14 @@ class Bot(TelegramClient):
                 await self.start(**kwargs)
                 if self.user_client:
                     await self.user_client.start()
-                await self.pyro_client.start()
+                try:
+                    await self.pyro_client.start()
+                except FloodWait as fw:
+                    self.logger.warning(
+                        f"FloodWait on pyrogram auth: sleeping {fw.value}s"
+                    )
+                    await asyncio.sleep(fw.value)
+                    await self.pyro_client.start()
             except ApiIdInvalidError:
                 self.logger.critical("API ID and API_HASH combination does not match!")
                 sys.exit(1)

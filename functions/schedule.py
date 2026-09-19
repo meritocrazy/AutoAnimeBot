@@ -41,7 +41,7 @@ class ScheduleTasks:
                 self.sch.add_job(self.anime_timing, "cron", hour=0, minute=30)  # 12:30 AM IST
             if Var.RESTART_EVERDAY:
                 self.sch.add_job(self.restart, "cron", hour=2, minute=1)  # 2:01 AM IST
-            self.sch.start()
+            self.bot.loop.call_soon_threadsafe(self.sch.start)
 
     async def anime_timing(self):
         try:
