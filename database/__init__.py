@@ -58,12 +58,8 @@ class DataBase:
     def _create_indexes(self):
         """Create database indexes for better query performance."""
         try:
-            # Unique index on _id is automatic, but we can add others
-            self.opts_db.create_index("_id", unique=True)
-            self.file_store_db.create_index("_id", unique=True)
-            self.broadcast_db.create_index("_id", unique=True)
-            self.channel_info_db.create_index("_id", unique=True)
-            self.file_info_db.create_index("_id", unique=True)
+            # _id is already uniquely indexed by MongoDB; no need to recreate
+            pass
         except Exception as exc:  # pylint: disable=broad-except
             LOGS.error(exc)
 
