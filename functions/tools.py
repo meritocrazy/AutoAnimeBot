@@ -46,7 +46,18 @@ _telegraph_token: str | None = None
 class Tools:
     """Utility class for various media processing tasks."""
 
+    _instance: "Tools | None" = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
     def __init__(self):
+        if self._initialized:
+            return
+        self._initialized = True
         if Var.DEV_MODE:
             self.ffmpeg_threads = int(os.cpu_count() or 0) + 2
         else:
@@ -97,7 +108,10 @@ class Tools:
         try:
             if not link:
                 return None
-            image = await self.async_searcher(link, re_content=True)
+            session = await self._get_session()
+            async with session.get(link) as resp:
+                resp.raise_for_status()
+                image = await resp.read()
             clean_link = link.split("?")[0]
             filename = clean_link.split("/")[-1]
             if len(filename) > 30 or not filename.lower().endswith((".jpg", ".png", ".jpeg")):
@@ -165,9 +179,59 @@ class Tools:
         """Initialize required directories and default thumbnail."""
         try:
             if not os.path.exists("thumb.jpg"):
-                content = requests.get(Var.THUMB, timeout=10).content
-                with open("thumb.jpg", "wb") as f:
-                    f.write(content)
+                try:
+                    r = requests.get(Var.THUMB, timeout=10)
+                    r.raise_for_status()
+                    with open("thumb.jpg", "wb") as f:
+                        f.write(r.content)
+                except Exception:
+                    LOGS.warning("Failed to download default thumbnail; using empty fallback")
+                    # Create a minimal valid JPEG (1x1 white pixel) so Telegram
+                    # doesn't reject thumb.jpg as corrupt
+                    with open("thumb.jpg", "wb") as f:
+                        f.write(
+                            b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01"
+                            b"\x00\x01\x00\x00\xff\xdb\x00C\x00\x08\x00\x00\x00\x00"
+                            b"\x00\x00\x00\xff\xc0\x00\x0b\x08\x00\x01\x00\x01\x01"
+                            b"\x01\x11\x00\xff\xc4\x00\x1f\x00\x00\x01\x05\x01\x01"
+                            b"\x01\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x01"
+                            b"\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\xff\xc4\x00\xb5"
+                            b"\x10\x00\x02\x01\x03\x03\x02\x04\x03\x05\x05\x04\x04"
+                            b"\x00\x00\x01}\x01\x02\x03\x00\x04\x11\x05\x12!1A\x06"
+                            b"\x13Qa\x07\"q\x142\x81\x91\xa1\x08#B\xb1\xc1\x15R"
+                            b"\xd1\xf0$3br\x82\t\n\x16\x17\x18\x19\x1a%&'()*45678"
+                            b"\x1b\x1c\x1d\x1e\x1f !\"#$%&'()*+,-./0123456789:;<=>"
+                            b"\x1f\x1f?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\x5c]^_`abcdefghijklmnopqrstuvwxyz"
+                            b"{|}~\x7f\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a"
+                            b"\x8b\x8c\x8d\x8e\x8f\x90\x91\x92\x93\x94\x95\x96\x97"
+                            b"\x98\x99\x9a\x9b\x9c\x9d\x9e\x9f\xa0\xa1\xa2\xa3\xa4"
+                            b"\xa5\xa6\xa7\xa8\xa9\xaa\xab\xac\xad\xae\xaf\xb0\xb1"
+                            b"\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xbb\xbc\xbd\xbe"
+                            b"\xbf\xc0\xc1\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xcb"
+                            b"\xcc\xcd\xce\xcf\xd0\xd1\xd2\xd3\xd4\xd5\xd6\xd7\xd8"
+                            b"\xd9\xda\xdb\xdc\xdd\xde\xdf\xe0\xe1\xe2\xe3\xe4\xe5"
+                            b"\xe6\xe7\xe8\xe9\xea\xeb\xec\xed\xee\xef\xf0\xf1\xf2"
+                            b"\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa\xfb\xfc\xfd\xfe\xff"
+                            b"\xff\xc4\x00\x1f\x00\x00\x01\x05\x01\x01\x01\x01\x01"
+                            b"\x01\x00\x00\x00\x00\x00\x00\x00\x01\x02\x03\x04\x05"
+                            b"\x06\x07\x08\t\n\x0b\xff\xc4\x00\xb5\x10\x00\x02\x01"
+                            b"\x03\x03\x02\x04\x03\x05\x05\x04\x04\x00\x00\x01}\x01"
+                            b"\x02\x03\x00\x04\x11\x05\x12!1A\x06\x13Qa\x07\"q\x14"
+                            b"2\x81\x91\xa1\x08#B\xb1\xc1\x15R\xd1\xf0$3br\x82\t\n"
+                            b"\x16\x17\x18\x19\x1a%&'()*45678\x1b\x1c\x1d\x1e\x1f"
+                            b" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                            b"[\x5c]^_`abcdefghijklmnopqrstuvwxyz{|}~\x7f\x80\x81"
+                            b"\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d\x8e"
+                            b"\x8f\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9a\x9b"
+                            b"\x9c\x9d\x9e\x9f\xa0\xa1\xa2\xa3\xa4\xa5\xa6\xa7\xa8"
+                            b"\xa9\xaa\xab\xac\xad\xae\xaf\xb0\xb1\xb2\xb3\xb4\xb5"
+                            b"\xb6\xb7\xb8\xb9\xba\xbb\xbc\xbd\xbe\xbf\xc0\xc1\xc2"
+                            b"\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xcb\xcc\xcd\xce\xcf"
+                            b"\xd0\xd1\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xdb\xdc"
+                            b"\xdd\xde\xdf\xe0\xe1\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9"
+                            b"\xea\xeb\xec\xed\xee\xef\xf0\xf1\xf2\xf3\xf4\xf5\xf6"
+                            b"\xf7\xf8\xf9\xfa\xfb\xfc\xfd\xfe\xff\xd9"
+                        )
             for dir_name in self._temp_dirs:
                 if not os.path.isdir(dir_name):
                     os.mkdir(dir_name)

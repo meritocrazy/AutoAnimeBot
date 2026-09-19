@@ -34,6 +34,20 @@ def mock_env():
         yield
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _close_shared_tools_session():
+    """Close the singleton Tools aiohttp session after the whole test run."""
+    yield
+    import asyncio
+
+    from functions.tools import Tools
+
+    try:
+        asyncio.run(Tools().close_session())
+    except RuntimeError:
+        pass
+
+
 class TestTools:
     @pytest.fixture
     def tools(self):
@@ -271,6 +285,24 @@ class TestToolsAsync:
             assert os.path.exists("thumbs")
             assert os.path.exists("downloads")
             assert os.path.exists("thumb.jpg")
+        finally:
+            os.chdir(old_cwd)
+
+    @pytest.mark.asyncio
+    async def test_init_dir_with_existing_thumb(self, tools, tmp_path):
+        # Regression: temp dirs must be created even when thumb.jpg already
+        # exists (creation loop was once nested inside the thumb.jpg check)
+        import os
+
+        old_cwd = os.getcwd()
+        os.chdir(tmp_path)
+        try:
+            with open("thumb.jpg", "wb") as f:
+                f.write(b"existing-thumb")
+            tools.init_dir()
+            assert os.path.exists("encode")
+            assert os.path.exists("thumbs")
+            assert os.path.exists("downloads")
         finally:
             os.chdir(old_cwd)
 
