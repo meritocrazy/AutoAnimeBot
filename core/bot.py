@@ -223,8 +223,14 @@ class Bot(TelegramClient):
         try:
             self.run_until_disconnected()
         finally:
-            # Cleanup on disconnect
-            self.run_in_loop(self.stop_client())
+            # run_until_disconnected stops the loop when it returns.
+            # If the loop is still usable, run cleanup on it; otherwise
+            # skip — the OS will close connections on process exit.
+            if not self.loop.is_closed():
+                try:
+                    self.run_in_loop(self.stop_client())
+                except RuntimeError:
+                    pass
 
     async def stop_client(self):
         """Graceful shutdown of all clients."""
@@ -232,11 +238,10 @@ class Bot(TelegramClient):
             await self.user_client.disconnect()
         if self.pyro_client.is_connected:
             await self.pyro_client.stop()
-        # Close aiohttp session if exists
+        # Close shared aiohttp session
         from functions.tools import Tools
 
-        tools = Tools()
-        await tools.close_session()
+        await Tools().close_session()
 
     def add_handler(self, func, *args, **kwargs):
         if func in [_[0] for _ in self.list_event_handlers()]:

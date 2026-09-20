@@ -34,13 +34,17 @@ class RawAnimeInfo:
 
     async def _get_session(self) -> aiohttp.ClientSession:
         if self._session is None or self._session.closed:
-            timeout = aiohttp.ClientTimeout(total=30, connect=10)
-            self._session = aiohttp.ClientSession(timeout=timeout)
+            from functions.tools import Tools
+
+            tools = Tools()
+            self._session = await tools._get_session()
         return self._session
 
     async def close(self):
         if self._session and not self._session.closed:
-            await self._session.close()
+            from functions.tools import Tools
+
+            await Tools().close_session()
 
     async def search(self, query: str):
         """Search for anime by query string.
@@ -52,14 +56,13 @@ class RawAnimeInfo:
             Dictionary with anime metadata.
         """
         raw_data = ((await self.searcher(query)) or {}).get("data") or {}
+        if not raw_data:
+            return {}
         try:
             _raw_data = await self.search_anilist(raw_data.get("id"))
         except Exception as exc:  # pylint: disable=broad-except
             _raw_data = {}
             LOGS.error("Search anilist failed: %s", exc)
-        if not raw_data:
-            data = {}  # self.alt_anilist(query)
-            return data
         data = {}
         data["anime_id"] = raw_data.get("id")
         data["english_title"] = raw_data.get("attributes", {}).get("titles", {}).get("en") or raw_data.get(
@@ -132,7 +135,7 @@ class RawAnimeInfo:
             AniList metadata.
         """
         if not kitsu_id:
-            raise ValueError("Kitsu: ID Not Found")
+            return {}
         session = await self._get_session()
         try:
             _data = {}
