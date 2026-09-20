@@ -30,6 +30,12 @@ from functions.info import AnimeInfo
 from functions.tools import Tools
 from libs.logger import Reporter
 
+# Optional TypeSafe upload-mode classification (cookbook: classification_using_confidence)
+try:
+    from functions.typesafe_integration import TYPESAFE_ENABLED, classify_upload_mode_async
+except Exception:
+    TYPESAFE_ENABLED = False
+
 
 class Executors:
     def __init__(
@@ -43,6 +49,10 @@ class Executors:
     ):
         self.is_original = configurations.get("original_upload")
         self.is_button = configurations.get("button_upload")
+        # TypeSafe classification is advisory only: the operator's DB config
+        # always wins. The check runs in execute() (async, off the event
+        # loop) — never in __init__, which is called on the event loop.
+        self.mode_classified = None
         self.anime_info = info
         self.bot = bot
         self.input_file = input_file
@@ -52,8 +62,42 @@ class Executors:
         self.msg_id = None
         self.output_file = None
 
+    async def _classify_mode(self):
+        """Advisory TypeSafe classification. Never overrides the operator's
+        DB config — disagreements are logged and surfaced via
+        self.mode_classified for admin review instead of applied silently."""
+        if not TYPESAFE_ENABLED:
+            return
+        try:
+            mode_result = await classify_upload_mode_async(
+                document_text=self.input_file,
+                is_original_config=bool(self.is_original),
+                is_button_config=bool(self.is_button),
+            )
+            self.mode_classified = mode_result
+            label = mode_result.get("label")
+            if mode_result.get("level") != "action" or label in (None, "manual_review"):
+                LOGS.info(
+                    "TypeSafe: low confidence (%s) — keeping DB config, flagging for review",
+                    mode_result.get("confidence"),
+                )
+            elif (label == "original_rename" and not self.is_original) or (
+                label == "button_upload" and not self.is_button
+            ):
+                # Model disagrees with the operator's config: keep the config
+                LOGS.warning(
+                    "TypeSafe suggested %r but DB config says otherwise — keeping DB config",
+                    label,
+                )
+            else:
+                LOGS.info("TypeSafe: DB config confirmed (%s, conf=%.2f)", label, mode_result.get("confidence") or 0)
+        except Exception:
+            LOGS.error("TypeSafe classification failed:\n%s", format_exc())
+            self.mode_classified = None
+
     async def execute(self):
         try:
+            await self._classify_mode()
             rename = await self.anime_info.rename(self.is_original)
             self.output_file = f"encode/{rename}"
             thumb = await self.tools.cover_dl((await self.anime_info.get_poster()))

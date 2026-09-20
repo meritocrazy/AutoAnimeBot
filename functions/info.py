@@ -24,6 +24,21 @@ import anitopy
 from libs.kitsu import RawAnimeInfo
 from libs.logger import LOGS
 
+# Optional TypeSafe pre-parsed extraction (cookbook: pre_parsed_value_extraction).
+# anitopy stays the primary parser; TypeSafe is only a confirmer when anitopy
+# found nothing. Calls run off the event loop and only with a real API key.
+try:
+    from functions.typesafe_integration import (
+        TYPESAFE_ENABLED,
+        pick_episode_async,
+        pick_quality_async,
+        find_candidates,
+        EPISODE_RE,
+        QUALITY_RE,
+    )
+except Exception:
+    TYPESAFE_ENABLED = False
+
 
 class AnimeInfo:
     def __init__(self, name):
@@ -99,10 +114,41 @@ class AnimeInfo:
 
     async def rename(self, original=False):
         try:
+            # Optional TypeSafe confirmation: only asked when anitopy missed
+            # a value, and run off the event loop via asyncio.to_thread.
+            episode_num = None
+            quality_tag = None
+            if TYPESAFE_ENABLED and self.name:
+                try:
+                    if not self.data.get("episode_number"):
+                        ep_candidates = find_candidates(EPISODE_RE, self.name)
+                        if ep_candidates:
+                            ep_result = await pick_episode_async(self.name, ep_candidates)
+                            if ep_result.get("choice") and ep_result.get("choice") != "none":
+                                episode_num = ep_result["choice"]
+                    if not self.data.get("video_resolution"):
+                        q_candidates = find_candidates(QUALITY_RE, self.name)
+                        if q_candidates:
+                            q_result = await pick_quality_async(self.name, q_candidates)
+                            if q_result.get("choice") and q_result.get("choice") != "none":
+                                quality_tag = q_result["choice"]
+                except Exception:
+                    # TypeSafe call failed; fall through to anitopy data
+                    LOGS.error("TypeSafe confirmation failed:\n%s", format_exc())
+
+            # anitopy parsed data is primary; TypeSafe only fills gaps above
             anime_name = self.data.get("anime_title")
-            if anime_name and self.data.get("episode_number"):
+            parsed_ep = self.data.get("episode_number")
+            parsed_qual = self.data.get("video_resolution")
+
+            episode_num = episode_num or parsed_ep
+            quality_tag = quality_tag or parsed_qual
+            season = self.data.get("anime_season") or 1
+
+            if anime_name and episode_num:
                 name = (
-                    f"[S{self.data.get('anime_season') or 1}-{self.data.get('episode_number') or ''}] {(await self.get_english())} [{self.data.get('video_resolution')}].mkv".replace(
+                    f"[S{season}-{str(episode_num).zfill(2)}] "
+                    f"{(await self.get_english())} [{quality_tag or '???'}].mkv".replace(
                         "‘", ""
                     )
                     .replace("’", "")
@@ -111,7 +157,7 @@ class AnimeInfo:
                 return self._sanitize_filename(name)
             if anime_name:
                 name = (
-                    f"{(await self.get_english())} [{self.data.get('video_resolution')}].mkv".replace("‘", "")
+                    f"{(await self.get_english())} [{quality_tag or parsed_qual or '???'}].mkv".replace("‘", "")
                     .replace("’", "")
                     .strip()
                 )
